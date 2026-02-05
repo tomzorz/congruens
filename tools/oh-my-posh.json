@@ -1,0 +1,18 @@
+{
+  "name": "oh-my-posh",
+  "description": "Cross-shell prompt theming engine",
+  "homepage": "https://ohmyposh.dev",
+  "install": {
+    "windows": {
+      "winget": "JanDeDobbeleer.OhMyPosh",
+      "choco": "oh-my-posh"
+    },
+    "macos": {
+      "brew": "jandedobbeleer/oh-my-posh/oh-my-posh"
+    },
+    "linux": {
+      "brew": "jandedobbeleer/oh-my-posh/oh-my-posh"
+    }
+  },
+  "verify": "oh-my-posh --version"
+}

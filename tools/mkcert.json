@@ -1,0 +1,19 @@
+{
+  "name": "mkcert",
+  "description": "Simple tool for making locally-trusted development certificates",
+  "homepage": "https://github.com/FiloSottile/mkcert",
+  "install": {
+    "windows": {
+      "winget": "FiloSottile.mkcert",
+      "choco": "mkcert"
+    },
+    "macos": {
+      "brew": "mkcert"
+    },
+    "linux": {
+      "apt": "mkcert",
+      "pacman": "mkcert"
+    }
+  },
+  "verify": "mkcert --version"
+}

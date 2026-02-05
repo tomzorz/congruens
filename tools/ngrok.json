@@ -1,0 +1,19 @@
+{
+  "name": "ngrok",
+  "description": "Secure introspectable tunnels to localhost",
+  "homepage": "https://ngrok.com",
+  "install": {
+    "windows": {
+      "winget": "Ngrok.Ngrok",
+      "choco": "ngrok"
+    },
+    "macos": {
+      "brew": "ngrok/ngrok/ngrok"
+    },
+    "linux": {
+      "apt": "ngrok",
+      "pacman": "ngrok"
+    }
+  },
+  "verify": "ngrok --version"
+}

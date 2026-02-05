@@ -1,0 +1,20 @@
+{
+  "name": "watchexec",
+  "description": "Execute commands when files change",
+  "homepage": "https://github.com/watchexec/watchexec",
+  "install": {
+    "windows": {
+      "winget": "watchexec.watchexec",
+      "choco": "watchexec"
+    },
+    "macos": {
+      "brew": "watchexec"
+    },
+    "linux": {
+      "apt": "watchexec",
+      "dnf": "watchexec",
+      "pacman": "watchexec"
+    }
+  },
+  "verify": "watchexec --version"
+}

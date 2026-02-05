@@ -1,0 +1,17 @@
+{
+  "name": "websocat",
+  "description": "Command-line WebSocket client (like netcat for WebSockets)",
+  "homepage": "https://github.com/vi/websocat",
+  "install": {
+    "windows": {
+      "choco": "websocat"
+    },
+    "macos": {
+      "brew": "websocat"
+    },
+    "linux": {
+      "pacman": "websocat"
+    }
+  },
+  "verify": "websocat --version"
+}

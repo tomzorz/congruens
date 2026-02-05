@@ -1,0 +1,20 @@
+{
+  "name": "ripgrep",
+  "description": "Fast regex-based search tool",
+  "homepage": "https://github.com/BurntSushi/ripgrep",
+  "install": {
+    "windows": {
+      "winget": "BurntSushi.ripgrep.MSVC",
+      "choco": "ripgrep"
+    },
+    "macos": {
+      "brew": "ripgrep"
+    },
+    "linux": {
+      "apt": "ripgrep",
+      "dnf": "ripgrep",
+      "pacman": "ripgrep"
+    }
+  },
+  "verify": "rg --version"
+}

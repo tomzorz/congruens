@@ -1,0 +1,20 @@
+{
+  "name": "lazygit",
+  "description": "Simple terminal UI for git commands",
+  "homepage": "https://github.com/jesseduffield/lazygit",
+  "install": {
+    "windows": {
+      "winget": "JesseDuffield.lazygit",
+      "choco": "lazygit"
+    },
+    "macos": {
+      "brew": "lazygit"
+    },
+    "linux": {
+      "apt": "lazygit",
+      "dnf": "lazygit",
+      "pacman": "lazygit"
+    }
+  },
+  "verify": "lazygit --version"
+}

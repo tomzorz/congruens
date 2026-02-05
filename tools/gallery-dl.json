@@ -1,0 +1,18 @@
+{
+  "name": "gallery-dl",
+  "description": "Command-line program to download image galleries from various sites",
+  "homepage": "https://github.com/mikf/gallery-dl",
+  "install": {
+    "windows": {
+      "winget": "mikf.gallery-dl",
+      "choco": "gallery-dl"
+    },
+    "macos": {
+      "brew": "gallery-dl"
+    },
+    "linux": {
+      "pacman": "gallery-dl"
+    }
+  },
+  "verify": "gallery-dl --version"
+}

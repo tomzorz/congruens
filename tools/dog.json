@@ -1,0 +1,17 @@
+{
+  "name": "dog",
+  "description": "Command-line DNS client with colorful output",
+  "homepage": "https://github.com/ogham/dog",
+  "install": {
+    "windows": {
+      "winget": "ogham.dog"
+    },
+    "macos": {
+      "brew": "dog"
+    },
+    "linux": {
+      "pacman": "dog"
+    }
+  },
+  "verify": "dog --version"
+}

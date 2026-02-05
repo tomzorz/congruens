@@ -1,0 +1,20 @@
+{
+  "name": "fzf",
+  "description": "Command-line fuzzy finder",
+  "homepage": "https://github.com/junegunn/fzf",
+  "install": {
+    "windows": {
+      "winget": "junegunn.fzf",
+      "choco": "fzf"
+    },
+    "macos": {
+      "brew": "fzf"
+    },
+    "linux": {
+      "apt": "fzf",
+      "dnf": "fzf",
+      "pacman": "fzf"
+    }
+  },
+  "verify": "fzf --version"
+}

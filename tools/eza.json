@@ -1,0 +1,20 @@
+{
+  "name": "eza",
+  "description": "Modern replacement for ls with colors and icons",
+  "homepage": "https://github.com/eza-community/eza",
+  "install": {
+    "windows": {
+      "winget": "eza-community.eza",
+      "choco": "eza"
+    },
+    "macos": {
+      "brew": "eza"
+    },
+    "linux": {
+      "apt": "eza",
+      "dnf": "eza",
+      "pacman": "eza"
+    }
+  },
+  "verify": "eza --version"
+}

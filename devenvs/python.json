@@ -1,0 +1,31 @@
+{
+  "name": "python",
+  "description": "Python runtime with uv package/project manager",
+  "homepage": "https://www.python.org",
+  "install": {
+    "windows": {
+      "script": [
+        "winget install astral-sh.uv",
+        "uv python install"
+      ]
+    },
+    "macos": {
+      "script": [
+        "curl -LsSf https://astral.sh/uv/install.sh | sh",
+        "uv python install"
+      ]
+    },
+    "linux": {
+      "script": [
+        "curl -LsSf https://astral.sh/uv/install.sh | sh",
+        "uv python install"
+      ]
+    }
+  },
+  "verify": "python --version && uv --version",
+  "env": {
+    "windows": {},
+    "macos": {},
+    "linux": {}
+  }
+}

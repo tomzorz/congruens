@@ -1,0 +1,19 @@
+{
+  "name": "nmap",
+  "description": "Network exploration tool and security scanner",
+  "homepage": "https://nmap.org",
+  "install": {
+    "windows": {
+      "choco": "nmap"
+    },
+    "macos": {
+      "brew": "nmap"
+    },
+    "linux": {
+      "apt": "nmap",
+      "dnf": "nmap",
+      "pacman": "nmap"
+    }
+  },
+  "verify": "nmap --version"
+}

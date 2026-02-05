@@ -1,0 +1,20 @@
+{
+  "name": "wget",
+  "description": "Network utility to retrieve files from the web",
+  "homepage": "https://www.gnu.org/software/wget/",
+  "install": {
+    "windows": {
+      "winget": "GNU.Wget2",
+      "choco": "wget"
+    },
+    "macos": {
+      "brew": "wget"
+    },
+    "linux": {
+      "apt": "wget",
+      "dnf": "wget",
+      "pacman": "wget"
+    }
+  },
+  "verify": "wget --version"
+}

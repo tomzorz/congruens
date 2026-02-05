@@ -1,0 +1,20 @@
+{
+  "name": "exiftool",
+  "description": "Read, write, and edit file metadata",
+  "homepage": "https://exiftool.org",
+  "install": {
+    "windows": {
+      "winget": "OliverBetz.ExifTool",
+      "choco": "exiftool"
+    },
+    "macos": {
+      "brew": "exiftool"
+    },
+    "linux": {
+      "apt": "libimage-exiftool-perl",
+      "dnf": "perl-Image-ExifTool",
+      "pacman": "perl-image-exiftool"
+    }
+  },
+  "verify": "exiftool -ver"
+}

@@ -1,0 +1,20 @@
+{
+  "name": "git",
+  "description": "Distributed version control system",
+  "homepage": "https://git-scm.com",
+  "install": {
+    "windows": {
+      "winget": "Git.Git",
+      "choco": "git"
+    },
+    "macos": {
+      "brew": "git"
+    },
+    "linux": {
+      "apt": "git",
+      "dnf": "git",
+      "pacman": "git"
+    }
+  },
+  "verify": "git --version"
+}

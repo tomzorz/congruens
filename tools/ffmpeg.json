@@ -1,0 +1,20 @@
+{
+  "name": "ffmpeg",
+  "description": "Complete solution to record, convert and stream audio and video",
+  "homepage": "https://ffmpeg.org",
+  "install": {
+    "windows": {
+      "winget": "Gyan.FFmpeg",
+      "choco": "ffmpeg"
+    },
+    "macos": {
+      "brew": "ffmpeg"
+    },
+    "linux": {
+      "apt": "ffmpeg",
+      "dnf": "ffmpeg",
+      "pacman": "ffmpeg"
+    }
+  },
+  "verify": "ffmpeg -version"
+}

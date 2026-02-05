@@ -1,0 +1,20 @@
+{
+  "name": "fd",
+  "description": "Fast and user-friendly alternative to find",
+  "homepage": "https://github.com/sharkdp/fd",
+  "install": {
+    "windows": {
+      "winget": "sharkdp.fd",
+      "choco": "fd"
+    },
+    "macos": {
+      "brew": "fd"
+    },
+    "linux": {
+      "apt": "fd-find",
+      "dnf": "fd-find",
+      "pacman": "fd"
+    }
+  },
+  "verify": "fd --version"
+}

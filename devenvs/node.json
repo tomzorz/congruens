@@ -1,0 +1,42 @@
+{
+  "name": "node",
+  "description": "Node.js runtime with nvm version manager and npm",
+  "homepage": "https://nodejs.org",
+  "install": {
+    "windows": {
+      "script": [
+        "winget install CoreyButler.NVMforWindows",
+        "nvm install lts",
+        "nvm use lts"
+      ]
+    },
+    "macos": {
+      "script": [
+        "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash",
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"",
+        "nvm install --lts",
+        "nvm use --lts"
+      ]
+    },
+    "linux": {
+      "script": [
+        "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash",
+        "export NVM_DIR=\"$HOME/.nvm\"",
+        "[ -s \"$NVM_DIR/nvm.sh\" ] && . \"$NVM_DIR/nvm.sh\"",
+        "nvm install --lts",
+        "nvm use --lts"
+      ]
+    }
+  },
+  "verify": "node --version && npm --version",
+  "env": {
+    "windows": {},
+    "macos": {
+      "NVM_DIR": "$HOME/.nvm"
+    },
+    "linux": {
+      "NVM_DIR": "$HOME/.nvm"
+    }
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "name": "yq",
+  "description": "Lightweight and portable command-line YAML processor",
+  "homepage": "https://github.com/mikefarah/yq",
+  "install": {
+    "windows": {
+      "winget": "MikeFarah.yq",
+      "choco": "yq"
+    },
+    "macos": {
+      "brew": "yq"
+    },
+    "linux": {
+      "apt": "yq",
+      "pacman": "yq"
+    }
+  },
+  "verify": "yq --version"
+}

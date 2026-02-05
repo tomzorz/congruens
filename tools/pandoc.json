@@ -1,0 +1,20 @@
+{
+  "name": "pandoc",
+  "description": "Universal document converter",
+  "homepage": "https://pandoc.org",
+  "install": {
+    "windows": {
+      "winget": "JohnMacFarlane.Pandoc",
+      "choco": "pandoc"
+    },
+    "macos": {
+      "brew": "pandoc"
+    },
+    "linux": {
+      "apt": "pandoc",
+      "dnf": "pandoc",
+      "pacman": "pandoc"
+    }
+  },
+  "verify": "pandoc --version"
+}

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Congruens default configuration",
+  "version": "1.0.0",
+  "settings": {
+    "dotfilesPath": "~/dotfiles",
+    "preferredPackageManager": {
+      "windows": "winget",
+      "macos": "brew",
+      "linux": "apt"
+    },
+    "theme": {
+      "ohMyPosh": "congruens.omp.json"
+    },
+    "tools": {
+      "autoUpdate": false,
+      "installMissing": false
+    }
+  },
+  "projectRoots": [
+    "~/projects",
+    "~/dev",
+    "~/code"
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "name": "hyperfine",
+  "description": "Command-line benchmarking tool",
+  "homepage": "https://github.com/sharkdp/hyperfine",
+  "install": {
+    "windows": {
+      "winget": "sharkdp.hyperfine",
+      "choco": "hyperfine"
+    },
+    "macos": {
+      "brew": "hyperfine"
+    },
+    "linux": {
+      "apt": "hyperfine",
+      "dnf": "hyperfine",
+      "pacman": "hyperfine"
+    }
+  },
+  "verify": "hyperfine --version"
+}

@@ -1,0 +1,28 @@
+# Set default behavior to automatically normalize line endings
+* text=auto
+
+# Explicitly declare text files
+*.ps1 text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.sh text eol=lf
+
+# Shell scripts should always have LF endings
+*.sh text eol=lf
+bootstrap/*.sh text eol=lf
+
+# PowerShell can handle LF on all platforms
+*.ps1 text eol=lf
+*.psm1 text eol=lf
+*.psd1 text eol=lf
+
+# Denote binary files
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary

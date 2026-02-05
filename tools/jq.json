@@ -1,0 +1,20 @@
+{
+  "name": "jq",
+  "description": "Lightweight command-line JSON processor",
+  "homepage": "https://jqlang.github.io/jq/",
+  "install": {
+    "windows": {
+      "winget": "jqlang.jq",
+      "choco": "jq"
+    },
+    "macos": {
+      "brew": "jq"
+    },
+    "linux": {
+      "apt": "jq",
+      "dnf": "jq",
+      "pacman": "jq"
+    }
+  },
+  "verify": "jq --version"
+}

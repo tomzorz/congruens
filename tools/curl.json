@@ -1,0 +1,20 @@
+{
+  "name": "curl",
+  "description": "Command-line tool for transferring data with URLs",
+  "homepage": "https://curl.se",
+  "install": {
+    "windows": {
+      "winget": "cURL.cURL",
+      "choco": "curl"
+    },
+    "macos": {
+      "brew": "curl"
+    },
+    "linux": {
+      "apt": "curl",
+      "dnf": "curl",
+      "pacman": "curl"
+    }
+  },
+  "verify": "curl --version"
+}

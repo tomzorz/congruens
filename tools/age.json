@@ -1,0 +1,20 @@
+{
+  "name": "age",
+  "description": "Simple, modern, and secure file encryption tool",
+  "homepage": "https://github.com/FiloSottile/age",
+  "install": {
+    "windows": {
+      "winget": "FiloSottile.age",
+      "choco": "age"
+    },
+    "macos": {
+      "brew": "age"
+    },
+    "linux": {
+      "apt": "age",
+      "dnf": "age",
+      "pacman": "age"
+    }
+  },
+  "verify": "age --version"
+}

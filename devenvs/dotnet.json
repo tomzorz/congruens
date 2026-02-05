@@ -1,0 +1,36 @@
+{
+  "name": "dotnet",
+  "description": ".NET SDK and runtime",
+  "homepage": "https://dotnet.microsoft.com",
+  "install": {
+    "windows": {
+      "script": [
+        "winget install Microsoft.DotNet.SDK.8"
+      ]
+    },
+    "macos": {
+      "script": [
+        "brew install --cask dotnet-sdk"
+      ]
+    },
+    "linux": {
+      "script": [
+        "wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh",
+        "chmod +x dotnet-install.sh",
+        "./dotnet-install.sh --channel LTS",
+        "rm dotnet-install.sh"
+      ]
+    }
+  },
+  "verify": "dotnet --version",
+  "env": {
+    "windows": {},
+    "macos": {
+      "DOTNET_ROOT": "/usr/local/share/dotnet"
+    },
+    "linux": {
+      "DOTNET_ROOT": "$HOME/.dotnet",
+      "PATH": "$HOME/.dotnet:$PATH"
+    }
+  }
+}

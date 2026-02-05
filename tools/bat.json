@@ -1,0 +1,20 @@
+{
+  "name": "bat",
+  "description": "Cat clone with syntax highlighting and Git integration",
+  "homepage": "https://github.com/sharkdp/bat",
+  "install": {
+    "windows": {
+      "winget": "sharkdp.bat",
+      "choco": "bat"
+    },
+    "macos": {
+      "brew": "bat"
+    },
+    "linux": {
+      "apt": "bat",
+      "dnf": "bat",
+      "pacman": "bat"
+    }
+  },
+  "verify": "bat --version"
+}

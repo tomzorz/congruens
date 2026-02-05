@@ -1,0 +1,20 @@
+{
+  "name": "rclone",
+  "description": "Command-line program to sync files and directories to cloud storage",
+  "homepage": "https://rclone.org",
+  "install": {
+    "windows": {
+      "winget": "Rclone.Rclone",
+      "choco": "rclone"
+    },
+    "macos": {
+      "brew": "rclone"
+    },
+    "linux": {
+      "apt": "rclone",
+      "dnf": "rclone",
+      "pacman": "rclone"
+    }
+  },
+  "verify": "rclone --version"
+}

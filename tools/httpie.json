@@ -1,0 +1,20 @@
+{
+  "name": "httpie",
+  "description": "User-friendly command-line HTTP client",
+  "homepage": "https://httpie.io",
+  "install": {
+    "windows": {
+      "winget": "HTTPie.HTTPie",
+      "choco": "httpie"
+    },
+    "macos": {
+      "brew": "httpie"
+    },
+    "linux": {
+      "apt": "httpie",
+      "dnf": "httpie",
+      "pacman": "httpie"
+    }
+  },
+  "verify": "http --version"
+}

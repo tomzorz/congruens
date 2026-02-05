@@ -1,0 +1,20 @@
+{
+  "name": "yt-dlp",
+  "description": "Feature-rich command-line audio/video downloader",
+  "homepage": "https://github.com/yt-dlp/yt-dlp",
+  "install": {
+    "windows": {
+      "winget": "yt-dlp.yt-dlp",
+      "choco": "yt-dlp"
+    },
+    "macos": {
+      "brew": "yt-dlp"
+    },
+    "linux": {
+      "apt": "yt-dlp",
+      "dnf": "yt-dlp",
+      "pacman": "yt-dlp"
+    }
+  },
+  "verify": "yt-dlp --version"
+}

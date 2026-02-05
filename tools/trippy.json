@@ -1,0 +1,19 @@
+{
+  "name": "trippy",
+  "description": "Network diagnostic tool combining ping and traceroute",
+  "homepage": "https://trippy.rs",
+  "install": {
+    "windows": {
+      "winget": "FujiApple.Trippy",
+      "choco": "trippy"
+    },
+    "macos": {
+      "brew": "trippy"
+    },
+    "linux": {
+      "pacman": "trippy",
+      "snap": "trippy"
+    }
+  },
+  "verify": "trip --version"
+}

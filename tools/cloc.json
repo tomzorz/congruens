@@ -1,0 +1,20 @@
+{
+  "name": "cloc",
+  "description": "Count lines of code in many programming languages",
+  "homepage": "https://github.com/AlDanial/cloc",
+  "install": {
+    "windows": {
+      "winget": "AlDanial.Cloc",
+      "choco": "cloc"
+    },
+    "macos": {
+      "brew": "cloc"
+    },
+    "linux": {
+      "apt": "cloc",
+      "dnf": "cloc",
+      "pacman": "cloc"
+    }
+  },
+  "verify": "cloc --version"
+}

@@ -1,0 +1,20 @@
+{
+  "name": "yazi",
+  "description": "Blazing fast terminal file manager written in Rust",
+  "homepage": "https://github.com/sxyazi/yazi",
+  "install": {
+    "windows": {
+      "winget": "sxyazi.yazi",
+      "choco": "yazi"
+    },
+    "macos": {
+      "brew": "yazi"
+    },
+    "linux": {
+      "apt": "yazi",
+      "dnf": "yazi",
+      "pacman": "yazi"
+    }
+  },
+  "verify": "yazi --version"
+}
