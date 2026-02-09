@@ -67,6 +67,7 @@ The Congruens module provides commands that abstract platform differences:
 
 | Command | Description |
 |---------|-------------|
+| `ll [path]` | Enhanced directory listing using eza (long format) |
 | `mkcd <dir>` | Create directory and cd into it |
 | `open [path]` | Open in file explorer (Explorer/Finder/xdg-open) |
 | `which <cmd>` | Find command location (works with aliases/functions) |
