@@ -1,32 +1,24 @@
 <#
 .SYNOPSIS
-    Install agent configurations by creating symlinks from standard tool locations
-    to the shared config in ~/dotfiles/agents/
+    Install agent configurations for AI coding assistants.
 
 .DESCRIPTION
-    Creates symbolic links so that OpenCode, Claude Code, and other agentic tools
-    can share the same skill and agent definitions.
+    - Sets OPENCODE_CONFIG_DIR env var for OpenCode (no symlinks needed)
+    - Creates symbolic links for Claude Code and Agent Skills standard
 
 .PARAMETER DryRun
     Show what would be done without making changes
-
-.PARAMETER Force
-    Remove existing files/directories before creating symlinks
 
 .EXAMPLE
     .\install.ps1
     
 .EXAMPLE
     .\install.ps1 -DryRun
-    
-.EXAMPLE
-    .\install.ps1 -Force
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$DryRun,
-    [switch]$Force
+    [switch]$DryRun
 )
 
 $ErrorActionPreference = 'Stop'
@@ -34,6 +26,7 @@ $ErrorActionPreference = 'Stop'
 # Configuration
 $DotfilesDir = if ($env:DOTFILES_DIR) { $env:DOTFILES_DIR } else { Join-Path $HOME 'dotfiles' }
 $AgentsDir = Join-Path $DotfilesDir 'agents'
+$ConfigDir = Join-Path $AgentsDir 'config'
 
 function Write-Info {
     param([string]$Message)
@@ -90,16 +83,12 @@ function New-SymbolicLinkSafe {
             }
         }
 
-        if ($Force) {
-            if ($DryRun) {
-                Write-Info "Would remove existing: $Target"
-            } else {
-                Remove-Item -Path $Target -Recurse -Force
-                Write-Warn "Removed existing: $Target"
-            }
+        # Remove and re-create to keep things idempotent
+        if ($DryRun) {
+            Write-Info "Would replace existing: $Target"
         } else {
-            Write-Warn "Skipping (exists): $Target (use -Force to override)"
-            return $false
+            Remove-Item -Path $Target -Recurse -Force
+            Write-Warn "Replaced existing: $Target"
         }
     }
 
@@ -119,6 +108,27 @@ function New-SymbolicLinkSafe {
     return $true
 }
 
+function Set-EnvVar {
+    param(
+        [string]$Name,
+        [string]$Value
+    )
+
+    $current = [Environment]::GetEnvironmentVariable($Name, 'User')
+    if ($current -eq $Value) {
+        Write-Success "Already set: $Name"
+        return
+    }
+
+    if ($DryRun) {
+        Write-Info "Would set user env var: $Name = $Value"
+    } else {
+        [Environment]::SetEnvironmentVariable($Name, $Value, 'User')
+        $env:OPENCODE_CONFIG_DIR = $Value
+        Write-Success "Set user env var: $Name = $Value"
+    }
+}
+
 # Main installation
 function Install-AgentConfigs {
     Write-Host ""
@@ -132,33 +142,36 @@ function Install-AgentConfigs {
     }
 
     # Check source exists
-    if (-not (Test-Path $AgentsDir)) {
-        Write-Err "Agents directory not found: $AgentsDir"
+    if (-not (Test-Path $ConfigDir)) {
+        Write-Err "Config directory not found: $ConfigDir"
         exit 1
     }
 
-    Write-Info "Source: $AgentsDir"
+    Write-Info "Source: $ConfigDir"
+    Write-Host ""
+
+    # OpenCode: set OPENCODE_CONFIG_DIR env var (no symlinks needed)
+    Write-Host "OpenCode:"
+    Set-EnvVar -Name 'OPENCODE_CONFIG_DIR' -Value $ConfigDir
     Write-Host ""
 
     # Claude Code symlinks
     Write-Host "Claude Code:"
-    New-SymbolicLinkSafe -Source (Join-Path $AgentsDir 'skills') -Target (Join-Path $HOME '.claude\skills') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $AgentsDir 'subagents') -Target (Join-Path $HOME '.claude\agents') | Out-Null
-    # CLAUDE.md is the Claude Code equivalent of AGENTS.md
-    New-SymbolicLinkSafe -Source (Join-Path $DotfilesDir 'AGENTS.md') -Target (Join-Path $HOME '.claude\CLAUDE.md') | Out-Null
-    Write-Host ""
-
-    # OpenCode symlinks
-    Write-Host "OpenCode:"
-    New-SymbolicLinkSafe -Source (Join-Path $AgentsDir 'skills') -Target (Join-Path $HOME '.opencode\skills') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $AgentsDir 'subagents') -Target (Join-Path $HOME '.opencode\agents') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $DotfilesDir 'AGENTS.md') -Target (Join-Path $HOME '.opencode\AGENTS.md') | Out-Null
+    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'skills') -Target (Join-Path $HOME '.claude\skills') | Out-Null
+    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'agents') -Target (Join-Path $HOME '.claude\agents') | Out-Null
+    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'claude-settings.json') -Target (Join-Path $HOME '.claude\settings.json') | Out-Null
+    $agentsMd = Join-Path $DotfilesDir 'AGENTS.md'
+    if (Test-Path $agentsMd) {
+        New-SymbolicLinkSafe -Source $agentsMd -Target (Join-Path $HOME '.claude\CLAUDE.md') | Out-Null
+    }
     Write-Host ""
 
     # Agent Skills standard symlinks
     Write-Host "Agent Skills Standard:"
-    New-SymbolicLinkSafe -Source (Join-Path $AgentsDir 'skills') -Target (Join-Path $HOME '.agents\skills') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $DotfilesDir 'AGENTS.md') -Target (Join-Path $HOME '.agents\AGENTS.md') | Out-Null
+    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'skills') -Target (Join-Path $HOME '.agents\skills') | Out-Null
+    if (Test-Path $agentsMd) {
+        New-SymbolicLinkSafe -Source $agentsMd -Target (Join-Path $HOME '.agents\AGENTS.md') | Out-Null
+    }
     Write-Host ""
 
     Write-Host "=============================="
@@ -166,17 +179,19 @@ function Install-AgentConfigs {
         Write-Info "Dry run complete. Run without -DryRun to apply changes."
     } else {
         Write-Success "Installation complete!"
+        Write-Info "Restart your shell for OPENCODE_CONFIG_DIR to take effect."
     }
     Write-Host ""
 }
 
 # Check for admin rights on Windows (needed for symlinks)
-$isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
-
-if (-not $isAdmin -and -not $DryRun) {
-    Write-Warn "Running without Administrator privileges. Symlink creation may fail."
-    Write-Warn "Consider running PowerShell as Administrator, or enable Developer Mode."
-    Write-Host ""
+if ($IsWindows -or ($PSVersionTable.PSEdition -eq 'Desktop')) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+    if (-not $isAdmin -and -not $DryRun) {
+        Write-Warn "Running without Administrator privileges. Symlink creation may fail."
+        Write-Warn "Consider running PowerShell as Administrator, or enable Developer Mode."
+        Write-Host ""
+    }
 }
 
 Install-AgentConfigs

@@ -18,6 +18,9 @@ Congruens provides a consistent terminal environment across Windows, macOS, and 
 ```powershell
 # Run the bootstrap script (requires PowerShell 7)
 .\bootstrap\windows.ps1
+
+# Set up AI agent configurations
+.\agents\install.ps1
 ```
 
 ### macOS / Linux
@@ -25,6 +28,9 @@ Congruens provides a consistent terminal environment across Windows, macOS, and 
 ```bash
 # Run the bootstrap script
 ./bootstrap/macos.sh   # or linux.sh
+
+# Set up AI agent configurations
+./agents/install.sh
 ```
 
 The bootstrap scripts will:
@@ -32,6 +38,11 @@ The bootstrap scripts will:
 2. Install tools from `tools/*.json`
 3. Link the PowerShell profile
 4. Configure oh-my-posh with the custom theme
+
+The agents install script will:
+1. Set the `OPENCODE_CONFIG_DIR` env var for OpenCode
+2. Create symlinks for Claude Code and Agent Skills standard
+3. Link shared skills and agent definitions
 
 ## Repository Structure
 
@@ -46,6 +57,9 @@ congruens/
 ├── devenvs/              # Development environment definitions (JSON)
 ├── bootstrap/            # Platform-specific bootstrap scripts
 ├── agents/               # AI agent configurations (portable across tools)
+│   ├── config/           # Config dir (OPENCODE_CONFIG_DIR points here)
+│   ├── install.sh/.ps1   # Agent setup scripts
+│   └── settings_plan.md  # Permission guidelines for tool configs
 └── config/               # Configuration files
 ```
 

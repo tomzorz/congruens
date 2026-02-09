@@ -1,18 +1,19 @@
 #!/usr/bin/env bash
 #
-# Install agent configurations by creating symlinks from standard tool locations
-# to the shared config in ~/dotfiles/agents/
+# Install agent configurations:
+# - Sets OPENCODE_CONFIG_DIR env var for OpenCode (no symlinks needed)
+# - Creates symlinks for Claude Code and Agent Skills standard
 #
-# Usage: ./install.sh [--dry-run] [--force]
+# Usage: ./install.sh [--dry-run]
 #
 
 set -euo pipefail
 
 DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
 AGENTS_DIR="$DOTFILES_DIR/agents"
+CONFIG_DIR="$AGENTS_DIR/config"
 
 DRY_RUN=false
-FORCE=false
 
 # Parse arguments
 for arg in "$@"; do
@@ -20,15 +21,11 @@ for arg in "$@"; do
         --dry-run)
             DRY_RUN=true
             ;;
-        --force)
-            FORCE=true
-            ;;
         --help|-h)
-            echo "Usage: $0 [--dry-run] [--force]"
+            echo "Usage: $0 [--dry-run]"
             echo ""
             echo "Options:"
             echo "  --dry-run  Show what would be done without making changes"
-            echo "  --force    Remove existing files/dirs before creating symlinks"
             exit 0
             ;;
     esac
@@ -85,16 +82,12 @@ create_symlink() {
             fi
         fi
 
-        if $FORCE; then
-            if $DRY_RUN; then
-                log_info "Would remove existing: $target"
-            else
-                rm -rf "$target"
-                log_warn "Removed existing: $target"
-            fi
+        # Remove and re-create to keep things idempotent
+        if $DRY_RUN; then
+            log_info "Would replace existing: $target"
         else
-            log_warn "Skipping (exists): $target (use --force to override)"
-            return 1
+            rm -rf "$target"
+            log_warn "Replaced existing: $target"
         fi
     fi
 
@@ -104,6 +97,45 @@ create_symlink() {
     else
         ln -s "$source" "$target"
         log_success "Linked: $target -> $source"
+    fi
+}
+
+# Add env var to shell profile
+set_env_var() {
+    local var_name="$1"
+    local var_value="$2"
+    local shell_rc
+
+    # Determine which rc file to use
+    if [[ -n "${ZSH_VERSION:-}" ]] || [[ "$SHELL" == */zsh ]]; then
+        shell_rc="$HOME/.zshrc"
+    else
+        shell_rc="$HOME/.bashrc"
+    fi
+
+    local export_line="export ${var_name}=\"${var_value}\""
+
+    if grep -qF "$var_name" "$shell_rc" 2>/dev/null; then
+        if grep -qF "$export_line" "$shell_rc" 2>/dev/null; then
+            log_success "Already set in $shell_rc: $var_name"
+            return 0
+        fi
+        # Update existing line
+        if $DRY_RUN; then
+            log_info "Would update $var_name in $shell_rc"
+        else
+            sed -i "s|^export ${var_name}=.*|${export_line}|" "$shell_rc"
+            log_success "Updated $var_name in $shell_rc"
+        fi
+    else
+        if $DRY_RUN; then
+            log_info "Would add to $shell_rc: $export_line"
+        else
+            echo "" >> "$shell_rc"
+            echo "# OpenCode config directory (added by congruens)" >> "$shell_rc"
+            echo "$export_line" >> "$shell_rc"
+            log_success "Added $var_name to $shell_rc"
+        fi
     fi
 }
 
@@ -120,33 +152,36 @@ main() {
     fi
 
     # Check source exists
-    if [[ ! -d "$AGENTS_DIR" ]]; then
-        log_error "Agents directory not found: $AGENTS_DIR"
+    if [[ ! -d "$CONFIG_DIR" ]]; then
+        log_error "Config directory not found: $CONFIG_DIR"
         exit 1
     fi
 
-    log_info "Source: $AGENTS_DIR"
+    log_info "Source: $CONFIG_DIR"
+    echo ""
+
+    # OpenCode: set OPENCODE_CONFIG_DIR env var (no symlinks needed)
+    echo "OpenCode:"
+    set_env_var "OPENCODE_CONFIG_DIR" "$CONFIG_DIR"
     echo ""
 
     # Claude Code symlinks
     echo "Claude Code:"
-    create_symlink "$AGENTS_DIR/skills" "$HOME/.claude/skills" || true
-    create_symlink "$AGENTS_DIR/subagents" "$HOME/.claude/agents" || true
+    create_symlink "$CONFIG_DIR/skills" "$HOME/.claude/skills" || true
+    create_symlink "$CONFIG_DIR/agents" "$HOME/.claude/agents" || true
+    create_symlink "$CONFIG_DIR/claude-settings.json" "$HOME/.claude/settings.json" || true
     # CLAUDE.md is the Claude Code equivalent of AGENTS.md
-    create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md" || true
-    echo ""
-
-    # OpenCode symlinks
-    echo "OpenCode:"
-    create_symlink "$AGENTS_DIR/skills" "$HOME/.opencode/skills" || true
-    create_symlink "$AGENTS_DIR/subagents" "$HOME/.opencode/agents" || true
-    create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.opencode/AGENTS.md" || true
+    if [[ -f "$DOTFILES_DIR/AGENTS.md" ]]; then
+        create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md" || true
+    fi
     echo ""
 
     # Agent Skills standard symlinks
     echo "Agent Skills Standard:"
-    create_symlink "$AGENTS_DIR/skills" "$HOME/.agents/skills" || true
-    create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.agents/AGENTS.md" || true
+    create_symlink "$CONFIG_DIR/skills" "$HOME/.agents/skills" || true
+    if [[ -f "$DOTFILES_DIR/AGENTS.md" ]]; then
+        create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.agents/AGENTS.md" || true
+    fi
     echo ""
 
     echo "=============================="
@@ -154,6 +189,7 @@ main() {
         log_info "Dry run complete. Run without --dry-run to apply changes."
     else
         log_success "Installation complete!"
+        log_info "Restart your shell or run: source ~/.bashrc (or ~/.zshrc)"
     fi
     echo ""
 }
