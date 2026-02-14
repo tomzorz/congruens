@@ -4,12 +4,13 @@ A shared cross-platform CLI experience. Same muscle-memory, same look, everywher
 
 ## What It Does
 
-Congruens provides a consistent terminal environment across Windows, macOS, and Linux:
+Congruens provides a consistent terminal + agentic environment across Windows, macOS, and Linux:
 
 - **PowerShell 7** as the unified shell
 - **oh-my-posh** with a custom theme for a consistent prompt
 - **Cross-platform commands** that work the same way everywhere
 - **Declarative tool definitions** for reproducible machine setup
+- **Agentic environment definition** for a reproducible llm setup
 
 ## Quick Start
 
@@ -148,3 +149,7 @@ A two-line powerline prompt:
 - **Intent over flags** - Commands wrap common patterns (`mkcd` vs `mkdir && cd`)
 - **Declarative over imperative** - Tools defined in JSON, scripts read definitions
 - **Portable paths** - Always use `~` and `$HOME`, dotfiles at fixed location
+
+## Ackonwledgements
+
+- To Jess Fraz and various others for inspiration on the agents.md
