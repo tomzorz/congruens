@@ -1,0 +1,20 @@
+{
+  "name": "doggo",
+  "description": "Command-line DNS client for humans with colorful output",
+  "homepage": "https://github.com/mr-karan/doggo",
+  "install": {
+    "windows": {
+      "winget": "MrKaran.Doggo",
+      "choco": "doggo"
+    },
+    "macos": {
+      "brew": "doggo"
+    },
+    "linux": {
+      "apt": "doggo",
+      "dnf": "doggo",
+      "pacman": "doggo"
+    }
+  },
+  "verify": "doggo --version"
+}
