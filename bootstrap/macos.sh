@@ -124,9 +124,52 @@ if command -v pwsh &> /dev/null; then
     PWSH_VERSION=$(pwsh --version | head -1)
     print_success "PowerShell is already installed: $PWSH_VERSION"
 else
-    print_info "Installing PowerShell..."
-    brew install --cask powershell
-    print_success "PowerShell installed"
+    print_info "Installing PowerShell from GitHub releases..."
+
+    # Follow the stable release redirect to discover the latest version tag.
+    # https://aka.ms/powershell-release?tag=stable redirects to the GitHub
+    # releases page for the latest stable PowerShell version.
+    RELEASE_URL=$(curl -sIL -o /dev/null -w '%{url_effective}' "https://aka.ms/powershell-release?tag=stable")
+
+    if [[ -z "$RELEASE_URL" ]]; then
+        print_failure "Could not resolve PowerShell release URL"
+        exit 1
+    fi
+
+    # Extract the version tag from the URL (e.g. "v7.5.4" from ".../tag/v7.5.4")
+    PS_TAG="${RELEASE_URL##*/}"
+    PS_VERSION="${PS_TAG#v}"
+    print_info "Latest stable release: $PS_TAG"
+
+    # Determine architecture
+    ARCH=$(uname -m)
+    if [[ "$ARCH" == "arm64" ]]; then
+        PKG_ARCH="osx-arm64"
+    else
+        PKG_ARCH="osx-x64"
+    fi
+
+    PKG_NAME="powershell-${PS_VERSION}-${PKG_ARCH}.pkg"
+    DOWNLOAD_URL="https://github.com/PowerShell/PowerShell/releases/download/${PS_TAG}/${PKG_NAME}"
+
+    print_info "Downloading $PKG_NAME..."
+    TEMP_PKG="$(mktemp -d)/${PKG_NAME}"
+    if ! curl -fSL -o "$TEMP_PKG" "$DOWNLOAD_URL"; then
+        print_failure "Failed to download $DOWNLOAD_URL"
+        rm -f "$TEMP_PKG"
+        exit 1
+    fi
+
+    print_info "Installing PowerShell (may require sudo)..."
+    if sudo installer -pkg "$TEMP_PKG" -target /; then
+        print_success "PowerShell $PS_VERSION installed"
+    else
+        print_failure "PowerShell installation failed"
+        rm -f "$TEMP_PKG"
+        exit 1
+    fi
+
+    rm -f "$TEMP_PKG"
 fi
 
 # Verify PowerShell works
