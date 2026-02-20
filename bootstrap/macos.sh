@@ -11,7 +11,9 @@
 # 6. Link dotfiles to ~/dotfiles
 # 7. Wire PowerShell $PROFILE to source repo profile
 # 8. Configure oh-my-posh
-# 9. Create local config from defaults
+# 9. Install Nerd Font
+# 10. Install Hungarian keyboard layout
+# 11. Create local config from defaults
 #
 # Usage:
 #   ./macos.sh           # Run the full bootstrap process
@@ -389,6 +391,36 @@ else
             print_warning "Could not install font via Homebrew"
             print_info "Install manually: brew install --cask font-caskaydia-cove-nerd-font"
         fi
+    fi
+fi
+
+# ============================================================================
+# Hungarian Keyboard Layout
+# ============================================================================
+
+print_step "Installing Hungarian (Windows-style) keyboard layout..."
+
+KEYLAYOUT_DIR="/Library/Keyboard Layouts"
+KEYLAYOUT_FILE="$KEYLAYOUT_DIR/Hungarian_Win.keylayout"
+KEYLAYOUT_URL="https://raw.githubusercontent.com/zaki/mac-hun-keyboard/refs/heads/master/Hungarian_Win.keylayout"
+
+if [[ -f "$KEYLAYOUT_FILE" ]]; then
+    print_success "Hungarian_Win.keylayout is already installed"
+else
+    print_info "Downloading Hungarian_Win.keylayout..."
+    TEMP_KEYLAYOUT="$(mktemp)"
+    if curl -fSL -o "$TEMP_KEYLAYOUT" "$KEYLAYOUT_URL"; then
+        print_info "Installing to $KEYLAYOUT_DIR (may require sudo)..."
+        if sudo cp "$TEMP_KEYLAYOUT" "$KEYLAYOUT_FILE"; then
+            print_success "Hungarian_Win.keylayout installed"
+            print_info "Enable it via System Preferences > Language & Text > Input Sources"
+        else
+            print_failure "Failed to copy keylayout to $KEYLAYOUT_DIR"
+        fi
+        rm -f "$TEMP_KEYLAYOUT"
+    else
+        print_failure "Failed to download keylayout from $KEYLAYOUT_URL"
+        rm -f "$TEMP_KEYLAYOUT"
     fi
 fi
 
