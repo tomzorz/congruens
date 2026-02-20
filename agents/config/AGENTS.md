@@ -9,6 +9,8 @@
 - Starting a task: read this guide end-to-end and align with fresh user instructions.
 - Regularly use the Napkin skill, writing whenever lessons are learned and reading before you start on a new task.
 - Use the Sticky Notes skill whenever you produce research, make decisions, or defer tasks that will be needed later. If the user says "remember this", "save for later", or parks a task, write a sticky note immediately. At session start, scan the filenames in `.agents/sticky-notes/` and only open the ones relevant to the current task.
+- Log assumptions explicitly using the Assumption Log skill. If you catch yourself thinking "this should be fine" or "I think this is how it works", write it down. Flag low-confidence assumptions and validate them before building on them.
+- When facing a technical unknown, use the Spike skill: define the question, set a timebox (max 20 min), investigate, and record findings as a sticky note with a go/no-go verdict. Don't guess when you can spike.
 - Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
 - Shipping C# changes: run `dotnet format` and ensure the build passes with no warnings before handing off.
