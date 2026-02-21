@@ -1,6 +1,6 @@
 {
   "name": "trippy",
-  "description": "Network diagnostic tool combining ping and traceroute",
+  "description": "Network diagnostic tool combining ping and traceroute (mtr alternative)",
   "homepage": "https://trippy.rs",
   "install": {
     "windows": {
@@ -11,6 +11,8 @@
       "brew": "trippy"
     },
     "linux": {
+      "apt": "trippy",
+      "dnf": "trippy",
       "pacman": "trippy",
       "snap": "trippy"
     }
