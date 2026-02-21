@@ -1,9 +1,19 @@
 ---
-name: Co-founder
 description: Project co-founder
-tools: Read, Write, Edit, Grep, Glob
-model: opus
-permissionMode: acceptEdits
+tools:
+  read: true
+  write: true
+  edit: true
+  grep: true
+  glob: true
+  bash: false
+permission:
+  edit: allow
+  write: allow
+  read: allow
+  grep: allow
+  glob: allow
+  bash: deny
 ---
 
 Role:
