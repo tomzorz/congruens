@@ -1,0 +1,21 @@
+{
+  "name": "deno",
+  "description": "Secure runtime for JavaScript and TypeScript",
+  "homepage": "https://deno.com",
+  "install": {
+    "windows": {
+      "winget": "DenoLand.Deno",
+      "choco": "deno"
+    },
+    "macos": {
+      "brew": "deno"
+    },
+    "linux": {
+      "apt": "deno",
+      "dnf": "deno",
+      "pacman": "deno",
+      "brew": "deno"
+    }
+  },
+  "verify": "deno --version"
+}
