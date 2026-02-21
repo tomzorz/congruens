@@ -86,8 +86,14 @@ The Congruens module provides commands that abstract platform differences:
 | `mkcd <dir>` | Create directory and cd into it |
 | `open [path]` | Open in file explorer (Explorer/Finder/xdg-open) |
 | `which <cmd>` | Find command location (works with aliases/functions) |
-| `path show` | Display PATH entries, one per line |
-| `path add <dir>` | Add to session PATH |
+| `cgrpath show` | Display PATH entries, one per line |
+| `cgrpath addsession <dir>` | Add directory to current session PATH |
+| `cgrpath addpermanent <dir>` | Add directory to PATH permanently |
+| `cgrpath remove <dir>` | Remove directory from session PATH |
+| `cgrenv show` | Display all environment variables |
+| `cgrenv show <name>` | Display a specific environment variable |
+| `cgrenv addsession <name> <value>` | Set an environment variable for the current session |
+| `cgrenv addpermanent <name> <value>` | Set an environment variable permanently |
 
 ### Tool Definitions
 

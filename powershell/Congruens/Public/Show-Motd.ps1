@@ -55,7 +55,12 @@ function Show-Motd {
         "Use 'mkcd <dir>' to create a directory and cd into it.",
         "Use 'open .' to open the current directory in your file explorer.",
         "Use 'which <command>' to find where a command is located.",
-        "Use 'path show' to display your PATH entries.",
+        "Use 'cgrpath show' to display your PATH entries.",
+        "Use 'cgrpath addsession <dir>' to add a folder to your session PATH.",
+        "Use 'cgrpath addpermanent <dir>' to persist a folder to your PATH.",
+        "Use 'cgrenv show' to list all environment variables.",
+        "Use 'cgrenv addsession <name> <value>' to set a session env variable.",
+        "Use 'cgrenv addpermanent <name> <value>' to persist an env variable.",
         "Use 'll' for enhanced directory listing with eza."
     )
     

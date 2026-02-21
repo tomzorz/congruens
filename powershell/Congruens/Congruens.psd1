@@ -26,7 +26,8 @@
         'New-DirectoryAndEnter',
         'Open-Path',
         'Get-CommandPath',
-        'Invoke-PathCommand',
+        'Invoke-CongruensPathCommand',
+        'Invoke-CongruensEnvCommand',
         'Show-CongruensManual',
         'Show-Motd',
         
@@ -38,6 +39,8 @@
         'which',
         'll',
         'cgrman',
+        'cgrpath',
+        'cgrenv',
         'motd'
     )
 
@@ -49,8 +52,7 @@
 
     # Aliases to export from this module
     AliasesToExport = @(
-        'open',
-        'path'
+        'open'
     )
 
     # Private data to pass to the module

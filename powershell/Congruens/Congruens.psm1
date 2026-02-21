@@ -22,4 +22,3 @@ if (Test-Path $PublicPath) {
 
 # Create aliases
 Set-Alias -Name 'open' -Value 'Open-Path' -Scope Global
-Set-Alias -Name 'path' -Value 'Invoke-PathCommand' -Scope Global

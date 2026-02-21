@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    PATH environment variable management.
+    Congruens PATH environment variable management.
 
 .DESCRIPTION
     Provides commands for viewing and manipulating the PATH environment variable.
-    Supports show, add, remove, and persist operations.
+    Supports show, addsession, addpermanent, and remove operations.
 #>
 
-function Invoke-PathCommand {
+function Invoke-CongruensPathCommand {
     <#
     .SYNOPSIS
         Manages the PATH environment variable.
@@ -15,40 +15,40 @@ function Invoke-PathCommand {
     .DESCRIPTION
         A multi-purpose command for PATH manipulation:
         - show: Display PATH entries, one per line
-        - add: Add a directory to session PATH
-        - rm/remove: Remove a directory from session PATH
-        - persist: Add a directory to PATH permanently
+        - addsession: Add a directory to the current session PATH
+        - addpermanent: Add a directory to PATH permanently
+        - remove: Remove a directory from session PATH
     
     .PARAMETER Action
-        The action to perform: show, add, rm, remove, or persist.
+        The action to perform: show, addsession, addpermanent, or remove.
     
     .PARAMETER Directory
-        The directory to add or remove (required for add/rm/persist).
+        The directory to add or remove (required for addsession/addpermanent/remove).
     
     .EXAMPLE
-        path show
+        cgrpath show
         
         Displays all PATH entries, one per line.
     
     .EXAMPLE
-        path add C:\tools\bin
+        cgrpath addsession C:\tools\bin
         
         Adds C:\tools\bin to the current session's PATH.
     
     .EXAMPLE
-        path rm C:\tools\bin
-        
-        Removes C:\tools\bin from the current session's PATH.
-    
-    .EXAMPLE
-        path persist C:\tools\bin
+        cgrpath addpermanent C:\tools\bin
         
         Permanently adds C:\tools\bin to the user's PATH.
+    
+    .EXAMPLE
+        cgrpath remove C:\tools\bin
+        
+        Removes C:\tools\bin from the current session's PATH.
     #>
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
-        [ValidateSet('show', 'add', 'rm', 'remove', 'persist')]
+        [ValidateSet('show', 'addsession', 'addpermanent', 'remove')]
         [string]$Action = 'show',
 
         [Parameter(Position = 1)]
@@ -73,9 +73,9 @@ function Invoke-PathCommand {
             }
         }
 
-        'add' {
+        'addsession' {
             if (-not $Directory) {
-                Write-Error "Directory required for 'add' action"
+                Write-Error "Directory required for 'addsession' action"
                 return
             }
 
@@ -92,38 +92,12 @@ function Invoke-PathCommand {
             }
 
             $env:PATH = $expandedDir + $pathSep + $env:PATH
-            Write-Output "Added to PATH: $expandedDir"
+            Write-Output "Added to session PATH: $expandedDir"
         }
 
-        { $_ -in 'rm', 'remove' } {
+        'addpermanent' {
             if (-not $Directory) {
-                Write-Error "Directory required for 'rm' action"
-                return
-            }
-
-            $expandedDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Directory)
-            $paths = $env:PATH -split [regex]::Escape($pathSep)
-            
-            # Filter out the directory (case-insensitive on Windows)
-            $newPaths = if (Test-IsWindows) {
-                $paths | Where-Object { $_ -and ($_.TrimEnd('\') -ne $expandedDir.TrimEnd('\')) }
-            }
-            else {
-                $paths | Where-Object { $_ -and ($_.TrimEnd('/') -ne $expandedDir.TrimEnd('/')) }
-            }
-
-            if ($newPaths.Count -eq $paths.Count) {
-                Write-Warning "Directory not found in PATH: $expandedDir"
-                return
-            }
-
-            $env:PATH = $newPaths -join $pathSep
-            Write-Output "Removed from PATH: $expandedDir"
-        }
-
-        'persist' {
-            if (-not $Directory) {
-                Write-Error "Directory required for 'persist' action"
+                Write-Error "Directory required for 'addpermanent' action"
                 return
             }
 
@@ -171,5 +145,48 @@ function Invoke-PathCommand {
                 Write-Output "Added to current session PATH: $expandedDir"
             }
         }
+
+        'remove' {
+            if (-not $Directory) {
+                Write-Error "Directory required for 'remove' action"
+                return
+            }
+
+            $expandedDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($Directory)
+            $paths = $env:PATH -split [regex]::Escape($pathSep)
+            
+            # Filter out the directory (case-insensitive on Windows)
+            $newPaths = if (Test-IsWindows) {
+                $paths | Where-Object { $_ -and ($_.TrimEnd('\') -ne $expandedDir.TrimEnd('\')) }
+            }
+            else {
+                $paths | Where-Object { $_ -and ($_.TrimEnd('/') -ne $expandedDir.TrimEnd('/')) }
+            }
+
+            if ($newPaths.Count -eq $paths.Count) {
+                Write-Warning "Directory not found in PATH: $expandedDir"
+                return
+            }
+
+            $env:PATH = $newPaths -join $pathSep
+            Write-Output "Removed from PATH: $expandedDir"
+        }
     }
+}
+
+function cgrpath {
+    <#
+    .SYNOPSIS
+        Alias for Invoke-CongruensPathCommand.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0)]
+        [ValidateSet('show', 'addsession', 'addpermanent', 'remove')]
+        [string]$Action = 'show',
+
+        [Parameter(Position = 1)]
+        [string]$Directory
+    )
+    Invoke-CongruensPathCommand @PSBoundParameters
 }
