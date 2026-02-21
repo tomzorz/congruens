@@ -155,7 +155,3 @@ A two-line powerline prompt:
 - **Intent over flags** - Commands wrap common patterns (`mkcd` vs `mkdir && cd`)
 - **Declarative over imperative** - Tools defined in JSON, scripts read definitions
 - **Portable paths** - All scripts resolve paths relative to the repo root
-
-## Ackonwledgements
-
-- To Jess Fraz and various others for inspiration on the agents.md
