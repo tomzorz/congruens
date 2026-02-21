@@ -28,9 +28,9 @@ function Show-CongruensManual {
     [CmdletBinding()]
     param()
 
-    # Find tools directory
-    $dotfilesPath = Join-Path $HOME "dotfiles"
-    $toolsPath = Join-Path $dotfilesPath "tools"
+    # Find tools directory (relative to this module: Public/ -> Congruens/ -> powershell/ -> repo root)
+    $congruensRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+    $toolsPath = Join-Path $congruensRoot "tools"
 
     if (-not (Test-Path $toolsPath)) {
         Write-Error "Tools directory not found at $toolsPath"

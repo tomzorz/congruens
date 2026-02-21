@@ -68,10 +68,10 @@ congruens/
 
 ### PowerShell Profile
 
-Your `$PROFILE` sources a single line:
+Your `$PROFILE` sources a single line (path depends on where you cloned the repo):
 
 ```powershell
-. "$HOME/dotfiles/powershell/profile.ps1"
+. "/path/to/congruens/powershell/profile.ps1"
 ```
 
 This loads the Congruens module and initializes oh-my-posh. All customization lives in the repo, keeping the actual profile minimal and stable.
@@ -139,7 +139,7 @@ A two-line powerline prompt:
 
 ## Configuration
 
-- **Dotfiles location:** `~/dotfiles` (fixed on all platforms)
+- **Clone location:** Anywhere you like -- all scripts resolve paths relative to the repo
 - **Local overrides:** `config/congruens.local.json` (gitignored)
 - **Git config:** Use git's include directive to source shared settings
 
@@ -148,7 +148,7 @@ A two-line powerline prompt:
 - **Functions over aliases** - More portable across platforms
 - **Intent over flags** - Commands wrap common patterns (`mkcd` vs `mkdir && cd`)
 - **Declarative over imperative** - Tools defined in JSON, scripts read definitions
-- **Portable paths** - Always use `~` and `$HOME`, dotfiles at fixed location
+- **Portable paths** - All scripts resolve paths relative to the repo root
 
 ## Ackonwledgements
 

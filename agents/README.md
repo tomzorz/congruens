@@ -6,12 +6,12 @@ Shared skills, subagents, and settings for AI coding assistants (OpenCode, Claud
 
 **Windows (PowerShell):**
 ```powershell
-. ~/dotfiles/agents/install.ps1
+.\agents\install.ps1
 ```
 
 **macOS/Linux:**
 ```bash
-~/dotfiles/agents/install.sh
+./agents/install.sh
 ```
 
 The install scripts:

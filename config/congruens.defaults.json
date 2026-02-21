@@ -3,7 +3,6 @@
   "description": "Congruens default configuration",
   "version": "1.0.0",
   "settings": {
-    "dotfilesPath": "~/dotfiles",
     "preferredPackageManager": {
       "windows": "winget",
       "macos": "brew",

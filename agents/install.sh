@@ -9,7 +9,9 @@
 
 set -euo pipefail
 
-DOTFILES_DIR="${DOTFILES_DIR:-$HOME/dotfiles}"
+# Resolve repo root from this script's location (agents/ -> repo root)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DOTFILES_DIR="${DOTFILES_DIR:-$(dirname "$SCRIPT_DIR")}"
 AGENTS_DIR="$DOTFILES_DIR/agents"
 CONFIG_DIR="$AGENTS_DIR/config"
 

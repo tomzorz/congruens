@@ -9,10 +9,9 @@
     2. Install Chocolatey and/or ensure winget is available
     3. Read tool definitions from tools/*.json
     4. Install each tool using first available package manager
-    5. Clone dotfiles to ~/dotfiles (if not exists)
-    6. Wire $PROFILE to source repo profile
-    7. Configure oh-my-posh
-    8. Create local config from defaults
+    5. Wire $PROFILE to source repo profile
+    6. Configure oh-my-posh
+    7. Create local config from defaults
 
 .EXAMPLE
     .\windows.ps1
@@ -99,35 +98,10 @@ if (-not $hasWinget -and -not $hasChoco) {
 }
 
 # ============================================================================
-# Dotfiles Setup
+# Repo Root
 # ============================================================================
 
-Write-Step "Setting up dotfiles..."
-
-$dotfilesPath = Join-Path $HOME "dotfiles"
 $repoRoot = Split-Path -Parent $PSScriptRoot
-
-if (Test-Path $dotfilesPath) {
-    Write-Success "Dotfiles already exist at $dotfilesPath"
-} else {
-    Write-Host "   Linking dotfiles to $dotfilesPath..." -ForegroundColor Gray
-    
-    try {
-        # Try to create junction (works without admin)
-        cmd /c mklink /J "$dotfilesPath" "$repoRoot" 2>$null
-        if (Test-Path $dotfilesPath) {
-            Write-Success "Linked dotfiles to $dotfilesPath"
-        } else {
-            # Fall back to copy
-            Copy-Item -Path $repoRoot -Destination $dotfilesPath -Recurse
-            Write-Success "Copied dotfiles to $dotfilesPath"
-        }
-    }
-    catch {
-        Write-Failure "Could not set up dotfiles: $_"
-        exit 1
-    }
-}
 
 # ============================================================================
 # Tool Installation
@@ -136,7 +110,7 @@ if (Test-Path $dotfilesPath) {
 if (-not $SkipTools) {
     Write-Step "Installing tools..."
 
-    $toolsPath = Join-Path $dotfilesPath "tools"
+    $toolsPath = Join-Path $repoRoot "tools"
     if (-not (Test-Path $toolsPath)) {
         Write-Warning "Tools directory not found at $toolsPath"
     } else {
@@ -206,15 +180,16 @@ if (-not $SkipProfile) {
         New-Item -Path $profileDir -ItemType Directory -Force | Out-Null
     }
 
-    $profileContent = @'
+    $profileSourcePath = Join-Path $repoRoot "powershell" "profile.ps1"
+    $profileContent = @"
 # Congruens - Cross-platform CLI experience
-# Source the dotfiles profile
-. "$HOME/dotfiles/powershell/profile.ps1"
-'@
+# Source the congruens profile
+. "$profileSourcePath"
+"@
 
     $existingProfile = if (Test-Path $PROFILE) { Get-Content $PROFILE -Raw } else { "" }
     
-    if ($existingProfile -like "*dotfiles/powershell/profile.ps1*") {
+    if ($existingProfile -like "*$profileSourcePath*") {
         Write-Success "Profile already configured"
     } else {
         if ($existingProfile -and -not $Force) {
@@ -241,7 +216,7 @@ $ompInstalled = $null -ne (Get-Command oh-my-posh -ErrorAction SilentlyContinue)
 if ($ompInstalled) {
     Write-Success "oh-my-posh is installed"
     
-    $themePath = Join-Path $dotfilesPath "omp" "congruens.omp.json"
+    $themePath = Join-Path $repoRoot "omp" "congruens.omp.json"
     if (Test-Path $themePath) {
         Write-Success "Theme found at $themePath"
         Write-Host "   Theme will be applied on next shell startup" -ForegroundColor Gray
@@ -325,7 +300,7 @@ if ($fontInstalled) {
 
 Write-Step "Setting up configuration..."
 
-$configPath = Join-Path $dotfilesPath "config"
+$configPath = Join-Path $repoRoot "config"
 $defaultsPath = Join-Path $configPath "congruens.defaults.json"
 $localPath = Join-Path $configPath "congruens.local.json"
 

@@ -24,7 +24,8 @@ param(
 $ErrorActionPreference = 'Stop'
 
 # Configuration
-$DotfilesDir = if ($env:DOTFILES_DIR) { $env:DOTFILES_DIR } else { Join-Path $HOME 'dotfiles' }
+# Resolve repo root from this script's location (agents/ -> repo root)
+$DotfilesDir = if ($env:DOTFILES_DIR) { $env:DOTFILES_DIR } else { Split-Path -Parent $PSScriptRoot }
 $AgentsDir = Join-Path $DotfilesDir 'agents'
 $ConfigDir = Join-Path $AgentsDir 'config'
 

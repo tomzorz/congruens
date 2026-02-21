@@ -8,12 +8,11 @@
 # 3. Install PowerShell 7
 # 4. Read tool definitions from tools/*.json
 # 5. Install each tool using Homebrew
-# 6. Link dotfiles to ~/dotfiles
-# 7. Wire PowerShell $PROFILE to source repo profile
-# 8. Configure oh-my-posh
-# 9. Install Nerd Font
-# 10. Install Hungarian keyboard layout
-# 11. Create local config from defaults
+# 6. Wire PowerShell $PROFILE to source repo profile
+# 7. Configure oh-my-posh
+# 8. Install Nerd Font
+# 9. Install Hungarian keyboard layout
+# 10. Create local config from defaults
 #
 # Usage:
 #   ./macos.sh           # Run the full bootstrap process
@@ -26,8 +25,6 @@ set -e
 # ============================================================================
 # Configuration
 # ============================================================================
-
-DOTFILES_PATH="$HOME/dotfiles"
 
 SKIP_TOOLS=false
 SKIP_PROFILE=false
@@ -181,28 +178,12 @@ if ! command -v pwsh &> /dev/null; then
 fi
 
 # ============================================================================
-# Dotfiles Setup
+# Repo Root
 # ============================================================================
-
-print_step "Setting up dotfiles..."
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
-
-if [[ -d "$DOTFILES_PATH" ]]; then
-    print_success "Dotfiles already exist at $DOTFILES_PATH"
-else
-    print_info "Linking dotfiles to $DOTFILES_PATH..."
-    ln -s "$REPO_ROOT" "$DOTFILES_PATH"
-    if [[ -L "$DOTFILES_PATH" ]]; then
-        print_success "Linked dotfiles to $DOTFILES_PATH"
-    else
-        print_warning "Could not create symlink, copying instead..."
-        cp -R "$REPO_ROOT" "$DOTFILES_PATH"
-        print_success "Copied dotfiles to $DOTFILES_PATH"
-    fi
-fi
 
 # ============================================================================
 # Tool Installation
@@ -211,7 +192,7 @@ fi
 if [[ "$SKIP_TOOLS" == false ]]; then
     print_step "Installing tools..."
 
-    TOOLS_PATH="$DOTFILES_PATH/tools"
+    TOOLS_PATH="$REPO_ROOT/tools"
     
     if [[ ! -d "$TOOLS_PATH" ]]; then
         print_warning "Tools directory not found at $TOOLS_PATH"
@@ -286,12 +267,12 @@ if [[ "$SKIP_PROFILE" == false ]]; then
         mkdir -p "$PWSH_PROFILE_DIR"
     fi
 
-    PROFILE_CONTENT='# Congruens - Cross-platform CLI experience
-# Source the dotfiles profile
-. "$HOME/dotfiles/powershell/profile.ps1"'
+    PROFILE_CONTENT="# Congruens - Cross-platform CLI experience
+# Source the congruens profile
+. \"$REPO_ROOT/powershell/profile.ps1\""
 
     if [[ -f "$PWSH_PROFILE" ]]; then
-        if grep -q "dotfiles/powershell/profile.ps1" "$PWSH_PROFILE"; then
+        if grep -q "$REPO_ROOT/powershell/profile.ps1" "$PWSH_PROFILE"; then
             print_success "Profile already configured"
         else
             # Append to existing profile
@@ -353,7 +334,7 @@ print_step "Configuring oh-my-posh..."
 if command -v oh-my-posh &> /dev/null; then
     print_success "oh-my-posh is installed"
     
-    THEME_PATH="$DOTFILES_PATH/omp/congruens.omp.json"
+    THEME_PATH="$REPO_ROOT/omp/congruens.omp.json"
     if [[ -f "$THEME_PATH" ]]; then
         print_success "Theme found at $THEME_PATH"
         print_info "Theme will be applied on next PowerShell startup"
@@ -430,7 +411,7 @@ fi
 
 print_step "Setting up configuration..."
 
-CONFIG_PATH="$DOTFILES_PATH/config"
+CONFIG_PATH="$REPO_ROOT/config"
 DEFAULTS_PATH="$CONFIG_PATH/congruens.defaults.json"
 LOCAL_PATH="$CONFIG_PATH/congruens.local.json"
 
