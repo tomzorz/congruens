@@ -28,6 +28,9 @@
         'Get-CommandPath',
         'Invoke-CongruensPathCommand',
         'Invoke-CongruensEnvCommand',
+        'Invoke-JumpCommand',
+        'Set-JumpAlias',
+        'Remove-JumpAlias',
         'Show-CongruensManual',
         'Show-Motd',
         
@@ -41,7 +44,10 @@
         'cgrman',
         'cgrpath',
         'cgrenv',
-        'motd'
+        'motd',
+        'jump',
+        'setjump',
+        'deljump'
     )
 
     # Cmdlets to export from this module
