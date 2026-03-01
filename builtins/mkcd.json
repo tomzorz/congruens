@@ -1,0 +1,7 @@
+{
+  "name": "mkcd",
+  "description": "Create a directory and cd into it in one step",
+  "usage": [
+    { "command": "mkcd <dir>", "info": "Create the directory (including parents) and change into it" }
+  ]
+}

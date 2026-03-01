@@ -1,0 +1,8 @@
+{
+  "name": "motd",
+  "description": "Display the Congruens Message of the Day with system info",
+  "usage": [
+    { "command": "motd", "info": "Show welcome banner and fastfetch output" },
+    { "command": "motd -SkipFastfetch", "info": "Show banner only, skip system info" }
+  ]
+}

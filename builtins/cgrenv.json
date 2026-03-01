@@ -1,0 +1,10 @@
+{
+  "name": "cgrenv",
+  "description": "Congruens environment variable management",
+  "usage": [
+    { "command": "cgrenv show", "info": "Display all environment variables" },
+    { "command": "cgrenv show <name>", "info": "Display a specific environment variable" },
+    { "command": "cgrenv addsession <name> <value>", "info": "Set an env variable for the current session" },
+    { "command": "cgrenv addpermanent <name> <value>", "info": "Set an env variable permanently" }
+  ]
+}

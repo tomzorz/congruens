@@ -1,0 +1,7 @@
+{
+  "name": "open",
+  "description": "Open a path in the system file explorer (Explorer/Finder/xdg-open)",
+  "usage": [
+    { "command": "open [path]", "info": "Open the given path (defaults to current directory)" }
+  ]
+}

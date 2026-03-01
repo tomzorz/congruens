@@ -1,0 +1,10 @@
+{
+  "name": "cgrpath",
+  "description": "Congruens PATH environment variable management",
+  "usage": [
+    { "command": "cgrpath show", "info": "Display PATH entries, one per line with index" },
+    { "command": "cgrpath addsession <dir>", "info": "Add a directory to the current session PATH" },
+    { "command": "cgrpath addpermanent <dir>", "info": "Add a directory to PATH permanently" },
+    { "command": "cgrpath remove <dir>", "info": "Remove a directory from session PATH" }
+  ]
+}

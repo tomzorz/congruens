@@ -1,0 +1,7 @@
+{
+  "name": "ll",
+  "description": "Enhanced directory listing using eza (long format)",
+  "usage": [
+    { "command": "ll [path]", "info": "List directory contents with icons, git status, and details" }
+  ]
+}

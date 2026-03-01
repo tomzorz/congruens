@@ -1,127 +1,176 @@
 <#
 .SYNOPSIS
-    Interactive browser for Congruens tool definitions and built-in commands.
+    Interactive browser for Congruens commands and tool definitions.
 
 .DESCRIPTION
-    Displays built-in commands and tool definitions from the tools/ directory in
-    an interactive viewer. Use left/right arrow keys to navigate, and 'q' or
-    Escape to quit.
+    Dynamically discovers built-in commands from builtins/*.json and external
+    tools from tools/*.json. Use subcommands to browse each category.
 #>
 
 function Show-CongruensManual {
     <#
     .SYNOPSIS
         Browse built-in commands and tool definitions interactively.
-    
+
     .DESCRIPTION
-        Displays built-in Congruens commands first, followed by external tools
-        from tools/*.json. Navigate with arrow keys.
-    
+        With no arguments, shows available subcommands.
+        Use 'builtins' to browse built-in Congruens commands.
+        Use 'tools' to browse external tool definitions.
+        Both categories are discovered dynamically from JSON files.
+
+    .PARAMETER Section
+        The section to browse: builtins or tools.
+
     .EXAMPLE
         Show-CongruensManual
-        
-        Opens the interactive tool browser.
-    
+
+        Shows available subcommands.
+
     .EXAMPLE
-        cgrman
-        
-        Same as Show-CongruensManual.
+        cgrman builtins
+
+        Opens the interactive browser for built-in commands.
+
+    .EXAMPLE
+        cgrman tools
+
+        Opens the interactive browser for external tools.
     #>
     [CmdletBinding()]
-    param()
-
-    # --- Built-in command definitions ---
-    $builtinCommands = @(
-        [PSCustomObject]@{
-            Name        = 'cgrpath'
-            Category    = 'builtin'
-            Description = 'Congruens PATH environment variable management'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'cgrpath show';                  Info = 'Display PATH entries, one per line with index' }
-                [PSCustomObject]@{ Command = 'cgrpath addsession <dir>';      Info = 'Add a directory to the current session PATH' }
-                [PSCustomObject]@{ Command = 'cgrpath addpermanent <dir>';    Info = 'Add a directory to PATH permanently' }
-                [PSCustomObject]@{ Command = 'cgrpath remove <dir>';          Info = 'Remove a directory from session PATH' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'cgrenv'
-            Category    = 'builtin'
-            Description = 'Congruens environment variable management'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'cgrenv show';                           Info = 'Display all environment variables' }
-                [PSCustomObject]@{ Command = 'cgrenv show <name>';                    Info = 'Display a specific environment variable' }
-                [PSCustomObject]@{ Command = 'cgrenv addsession <name> <value>';      Info = 'Set an env variable for the current session' }
-                [PSCustomObject]@{ Command = 'cgrenv addpermanent <name> <value>';    Info = 'Set an env variable permanently' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'll'
-            Category    = 'builtin'
-            Description = 'Enhanced directory listing using eza (long format)'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'll [path]'; Info = 'List directory contents with icons, git status, and details' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'mkcd'
-            Category    = 'builtin'
-            Description = 'Create a directory and cd into it in one step'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'mkcd <dir>'; Info = 'Create the directory (including parents) and change into it' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'open'
-            Category    = 'builtin'
-            Description = 'Open a path in the system file explorer (Explorer/Finder/xdg-open)'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'open [path]'; Info = 'Open the given path (defaults to current directory)' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'which'
-            Category    = 'builtin'
-            Description = 'Find the location of a command (works with aliases, functions, and executables)'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'which <command>'; Info = 'Show the source/path of the command' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'cgrman'
-            Category    = 'builtin'
-            Description = 'Interactive browser for Congruens commands and tool definitions'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'cgrman'; Info = 'Open this manual' }
-            )
-        }
-        [PSCustomObject]@{
-            Name        = 'motd'
-            Category    = 'builtin'
-            Description = 'Display the Congruens Message of the Day with system info'
-            Usage       = @(
-                [PSCustomObject]@{ Command = 'motd';                Info = 'Show welcome banner and fastfetch output' }
-                [PSCustomObject]@{ Command = 'motd -SkipFastfetch'; Info = 'Show banner only, skip system info' }
-            )
-        }
+    param(
+        [Parameter(Position = 0)]
+        [ValidateSet('builtins', 'tools')]
+        [string]$Section
     )
 
-    # --- External tool definitions from tools/*.json ---
     $congruensRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
-    $toolsPath = Join-Path $congruensRoot "tools"
 
-    $externalTools = @()
+    if (-not $Section) {
+        Show-ManualHelp -CongruensRoot $congruensRoot
+        return
+    }
+
+    switch ($Section) {
+        'builtins' { Show-BuiltinBrowser -CongruensRoot $congruensRoot }
+        'tools' { Show-ToolBrowser -CongruensRoot $congruensRoot }
+    }
+}
+
+# --- Private: help screen when no subcommand is given ---
+
+function Show-ManualHelp {
+    param([string]$CongruensRoot)
+
+    $builtinsPath = Join-Path $CongruensRoot "builtins"
+    $toolsPath = Join-Path $CongruensRoot "tools"
+
+    $builtinCount = 0
+    if (Test-Path $builtinsPath) {
+        $builtinCount = (Get-ChildItem -Path $builtinsPath -Filter "*.json" | Measure-Object).Count
+    }
+    $toolCount = 0
     if (Test-Path $toolsPath) {
-        $toolFiles = Get-ChildItem -Path $toolsPath -Filter "*.json" | Sort-Object Name
-        foreach ($file in $toolFiles) {
+        $toolCount = (Get-ChildItem -Path $toolsPath -Filter "*.json" | Measure-Object).Count
+    }
+
+    Write-Host ""
+    Write-Host "  CONGRUENS MANUAL" -ForegroundColor Cyan
+    Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "  Usage:" -ForegroundColor White
+    Write-Host "    cgrman builtins" -ForegroundColor Yellow -NoNewline
+    Write-Host "    Browse built-in commands ($builtinCount)" -ForegroundColor Gray
+    Write-Host "    cgrman tools" -ForegroundColor Yellow -NoNewline
+    Write-Host "       Browse external tools ($toolCount)" -ForegroundColor Gray
+    Write-Host ""
+    Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+
+    # Quick summary of builtins
+    if ($builtinCount -gt 0) {
+        Write-Host ""
+        Write-Host "  Built-in commands:" -ForegroundColor White
+        $builtinFiles = Get-ChildItem -Path $builtinsPath -Filter "*.json" | Sort-Object Name
+        foreach ($file in $builtinFiles) {
+            try {
+                $cmd = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                Write-Host "    $($cmd.name)" -ForegroundColor Yellow -NoNewline
+                $padding = ' ' * [Math]::Max(1, 14 - $cmd.name.Length)
+                Write-Host "$padding$($cmd.description)" -ForegroundColor Gray
+            }
+            catch {
+                Write-Warning "  Failed to parse $($file.Name): $_"
+            }
+        }
+    }
+
+    # Quick summary of tools (just count, don't list all 38)
+    if ($toolCount -gt 0) {
+        Write-Host ""
+        Write-Host "  External tools:" -ForegroundColor White
+        Write-Host "    $toolCount tools configured" -ForegroundColor Gray -NoNewline
+        Write-Host " (run " -ForegroundColor DarkGray -NoNewline
+        Write-Host "cgrman tools" -ForegroundColor Yellow -NoNewline
+        Write-Host " to browse)" -ForegroundColor DarkGray
+    }
+
+    Write-Host ""
+}
+
+# --- Private: interactive TUI for built-in commands ---
+
+function Show-BuiltinBrowser {
+    param([string]$CongruensRoot)
+
+    $builtinsPath = Join-Path $CongruensRoot "builtins"
+    $entries = @()
+
+    if (Test-Path $builtinsPath) {
+        $files = Get-ChildItem -Path $builtinsPath -Filter "*.json" | Sort-Object Name
+        foreach ($file in $files) {
+            try {
+                $cmd = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                $usage = @()
+                foreach ($u in $cmd.usage) {
+                    $usage += [PSCustomObject]@{ Command = $u.command; Info = $u.info }
+                }
+                $entries += [PSCustomObject]@{
+                    Name        = $cmd.name
+                    Description = $cmd.description
+                    Usage       = $usage
+                }
+            }
+            catch {
+                Write-Warning "Failed to parse $($file.Name): $_"
+            }
+        }
+    }
+
+    if ($entries.Count -eq 0) {
+        Write-Error "No built-in command definitions found in builtins/"
+        return
+    }
+
+    Start-InteractiveBrowser -Entries $entries -Category 'builtin'
+}
+
+# --- Private: interactive TUI for external tools ---
+
+function Show-ToolBrowser {
+    param([string]$CongruensRoot)
+
+    $toolsPath = Join-Path $CongruensRoot "tools"
+    $entries = @()
+
+    if (Test-Path $toolsPath) {
+        $files = Get-ChildItem -Path $toolsPath -Filter "*.json" | Sort-Object Name
+        foreach ($file in $files) {
             try {
                 $tool = Get-Content $file.FullName -Raw | ConvertFrom-Json
-                $externalTools += [PSCustomObject]@{
+                $entries += [PSCustomObject]@{
                     Name        = $tool.name
-                    Category    = 'external'
                     Description = $tool.description
                     Homepage    = $tool.homepage
                     Verify      = $tool.verify
-                    FileName    = $file.BaseName
                     Install     = $tool.install
                 }
             }
@@ -131,190 +180,192 @@ function Show-CongruensManual {
         }
     }
 
-    # Combine: built-in commands first, then external tools
-    $allEntries = @() + $builtinCommands + $externalTools
-
-    if ($allEntries.Count -eq 0) {
-        Write-Error "No commands or tool definitions found"
+    if ($entries.Count -eq 0) {
+        Write-Error "No tool definitions found in tools/"
         return
     }
+
+    Start-InteractiveBrowser -Entries $entries -Category 'external'
+}
+
+# --- Private: shared interactive TUI ---
+
+function Start-InteractiveBrowser {
+    param(
+        [PSCustomObject[]]$Entries,
+        [string]$Category
+    )
 
     $currentIndex = 0
     $running = $true
 
-    # Function to display a built-in command page
-    function Show-Builtin {
-        param([PSCustomObject]$Entry, [int]$Index, [int]$Total)
-        
-        Clear-Host
-        Write-Host ""
-        Write-Host "  CONGRUENS MANUAL" -ForegroundColor Cyan
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host ""
-        
-        Write-Host "  $($Entry.Name)" -ForegroundColor Yellow -NoNewline
-        Write-Host "  ($($Index + 1)/$Total)" -ForegroundColor DarkGray -NoNewline
-        Write-Host "  [built-in]" -ForegroundColor Green
-        Write-Host ""
-        Write-Host "  $($Entry.Description)" -ForegroundColor White
-        Write-Host ""
-        
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host "  Usage:" -ForegroundColor DarkGray
-        Write-Host ""
-        
-        foreach ($u in $Entry.Usage) {
-            Write-Host "    $($u.Command)" -ForegroundColor Cyan
-            Write-Host "      $($u.Info)" -ForegroundColor Gray
-            Write-Host ""
-        }
-        
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host "  [<-] Previous  [->] Next  [q/Esc] Quit" -ForegroundColor DarkGray
-        Write-Host ""
-    }
-
-    # Function to display an external tool page
-    function Show-ExternalTool {
-        param([PSCustomObject]$Entry, [int]$Index, [int]$Total)
-        
-        Clear-Host
-        Write-Host ""
-        Write-Host "  CONGRUENS MANUAL" -ForegroundColor Cyan
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host ""
-        
-        Write-Host "  $($Entry.Name)" -ForegroundColor Yellow -NoNewline
-        Write-Host "  ($($Index + 1)/$Total)" -ForegroundColor DarkGray -NoNewline
-        Write-Host "  [external tool]" -ForegroundColor Magenta
-        Write-Host ""
-        Write-Host "  $($Entry.Description)" -ForegroundColor White
-        Write-Host ""
-        
-        if ($Entry.Homepage) {
-            Write-Host "  Homepage: " -ForegroundColor DarkGray -NoNewline
-            Write-Host "$($Entry.Homepage)" -ForegroundColor Blue
-        }
-        
-        if ($Entry.Verify) {
-            Write-Host "  Verify:   " -ForegroundColor DarkGray -NoNewline
-            Write-Host "$($Entry.Verify)" -ForegroundColor Gray
-        }
-        
-        Write-Host ""
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host "  Install methods:" -ForegroundColor DarkGray
-        Write-Host ""
-        
-        if ($Entry.Install.windows) {
-            Write-Host "    Windows:" -ForegroundColor Magenta
-            if ($Entry.Install.windows.winget) {
-                Write-Host "      winget: " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.windows.winget)" -ForegroundColor White
-            }
-            if ($Entry.Install.windows.choco) {
-                Write-Host "      choco:  " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.windows.choco)" -ForegroundColor White
-            }
-        }
-        
-        if ($Entry.Install.macos) {
-            Write-Host "    macOS:" -ForegroundColor Magenta
-            if ($Entry.Install.macos.brew) {
-                Write-Host "      brew:   " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.macos.brew)" -ForegroundColor White
-            }
-        }
-        
-        if ($Entry.Install.linux) {
-            Write-Host "    Linux:" -ForegroundColor Magenta
-            if ($Entry.Install.linux.apt) {
-                Write-Host "      apt:    " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.linux.apt)" -ForegroundColor White
-            }
-            if ($Entry.Install.linux.dnf) {
-                Write-Host "      dnf:    " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.linux.dnf)" -ForegroundColor White
-            }
-            if ($Entry.Install.linux.pacman) {
-                Write-Host "      pacman: " -NoNewline -ForegroundColor DarkGray
-                Write-Host "$($Entry.Install.linux.pacman)" -ForegroundColor White
-            }
-        }
-        
-        Write-Host ""
-        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
-        Write-Host "  [<-] Previous  [->] Next  [q/Esc] Quit" -ForegroundColor DarkGray
-        Write-Host ""
-    }
-
     # Render the current entry
-    function Show-Entry {
-        param([int]$Index)
-        $entry = $allEntries[$Index]
-        $total = $allEntries.Count
-        if ($entry.Category -eq 'builtin') {
-            Show-Builtin -Entry $entry -Index $Index -Total $total
-        }
-        else {
-            Show-ExternalTool -Entry $entry -Index $Index -Total $total
-        }
-    }
+    Render-Entry -Entries $Entries -Index $currentIndex -Category $Category
 
-    # Initial display
-    Show-Entry -Index $currentIndex
-
-    # Main loop
     while ($running) {
         $key = [Console]::ReadKey($true)
-        
+
         switch ($key.Key) {
             'LeftArrow' {
-                if ($currentIndex -gt 0) {
-                    $currentIndex--
-                }
-                elseif ($allEntries.Count -gt 1) {
-                    $currentIndex = $allEntries.Count - 1
-                }
-                Show-Entry -Index $currentIndex
+                if ($currentIndex -gt 0) { $currentIndex-- }
+                elseif ($Entries.Count -gt 1) { $currentIndex = $Entries.Count - 1 }
+                Render-Entry -Entries $Entries -Index $currentIndex -Category $Category
             }
             'RightArrow' {
-                if ($currentIndex -lt $allEntries.Count - 1) {
-                    $currentIndex++
-                }
-                elseif ($allEntries.Count -gt 1) {
-                    $currentIndex = 0
-                }
-                Show-Entry -Index $currentIndex
+                if ($currentIndex -lt $Entries.Count - 1) { $currentIndex++ }
+                elseif ($Entries.Count -gt 1) { $currentIndex = 0 }
+                Render-Entry -Entries $Entries -Index $currentIndex -Category $Category
             }
             'Home' {
                 $currentIndex = 0
-                Show-Entry -Index $currentIndex
+                Render-Entry -Entries $Entries -Index $currentIndex -Category $Category
             }
             'End' {
-                $currentIndex = $allEntries.Count - 1
-                Show-Entry -Index $currentIndex
+                $currentIndex = $Entries.Count - 1
+                Render-Entry -Entries $Entries -Index $currentIndex -Category $Category
             }
-            'Escape' {
-                $running = $false
-            }
-            'Q' {
-                $running = $false
-            }
+            'Escape' { $running = $false }
+            'Q' { $running = $false }
         }
     }
 
     Clear-Host
 }
 
-# Alias for convenience
+# --- Private: render a single entry page ---
+
+function Render-Entry {
+    param(
+        [PSCustomObject[]]$Entries,
+        [int]$Index,
+        [string]$Category
+    )
+
+    $entry = $Entries[$Index]
+    $total = $Entries.Count
+
+    Clear-Host
+    Write-Host ""
+    Write-Host "  CONGRUENS MANUAL" -ForegroundColor Cyan
+    Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host ""
+
+    Write-Host "  $($entry.Name)" -ForegroundColor Yellow -NoNewline
+    Write-Host "  ($($Index + 1)/$total)" -ForegroundColor DarkGray -NoNewline
+    if ($Category -eq 'builtin') {
+        Write-Host "  [built-in]" -ForegroundColor Green
+    }
+    else {
+        Write-Host "  [external tool]" -ForegroundColor Magenta
+    }
+
+    Write-Host ""
+    Write-Host "  $($entry.Description)" -ForegroundColor White
+    Write-Host ""
+
+    if ($Category -eq 'builtin') {
+        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "  Usage:" -ForegroundColor DarkGray
+        Write-Host ""
+
+        foreach ($u in $entry.Usage) {
+            Write-Host "    $($u.Command)" -ForegroundColor Cyan
+            Write-Host "      $($u.Info)" -ForegroundColor Gray
+            Write-Host ""
+        }
+    }
+    else {
+        if ($entry.Homepage) {
+            Write-Host "  Homepage: " -ForegroundColor DarkGray -NoNewline
+            Write-Host "$($entry.Homepage)" -ForegroundColor Blue
+        }
+
+        if ($entry.Verify) {
+            Write-Host "  Verify:   " -ForegroundColor DarkGray -NoNewline
+            Write-Host "$($entry.Verify)" -ForegroundColor Gray
+        }
+
+        Write-Host ""
+        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "  Install methods:" -ForegroundColor DarkGray
+        Write-Host ""
+
+        if ($entry.Install.windows) {
+            Write-Host "    Windows:" -ForegroundColor Magenta
+            if ($entry.Install.windows.winget) {
+                Write-Host "      winget: " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.windows.winget)" -ForegroundColor White
+            }
+            if ($entry.Install.windows.choco) {
+                Write-Host "      choco:  " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.windows.choco)" -ForegroundColor White
+            }
+        }
+
+        if ($entry.Install.macos) {
+            Write-Host "    macOS:" -ForegroundColor Magenta
+            if ($entry.Install.macos.brew) {
+                Write-Host "      brew:   " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.macos.brew)" -ForegroundColor White
+            }
+        }
+
+        if ($entry.Install.linux) {
+            Write-Host "    Linux:" -ForegroundColor Magenta
+            if ($entry.Install.linux.apt) {
+                Write-Host "      apt:    " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.linux.apt)" -ForegroundColor White
+            }
+            if ($entry.Install.linux.dnf) {
+                Write-Host "      dnf:    " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.linux.dnf)" -ForegroundColor White
+            }
+            if ($entry.Install.linux.pacman) {
+                Write-Host "      pacman: " -NoNewline -ForegroundColor DarkGray
+                Write-Host "$($entry.Install.linux.pacman)" -ForegroundColor White
+            }
+        }
+    }
+
+    Write-Host ""
+    Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+    Write-Host "  [<-] Previous  [->] Next  [Home] First  [End] Last  [q/Esc] Quit" -ForegroundColor DarkGray
+    Write-Host ""
+}
+
+# --- Wrapper function ---
+
 function cgrman {
     <#
     .SYNOPSIS
-        Alias for Show-CongruensManual - Congruens Manual.
+        Congruens Manual - browse built-in commands and external tools.
     #>
     [CmdletBinding()]
-    param()
+    param(
+        [Parameter(Position = 0)]
+        [ValidateSet('builtins', 'tools')]
+        [string]$Section
+    )
 
-    Show-CongruensManual
+    Show-CongruensManual @PSBoundParameters
 }
+
+# --- Tab completion for the Section parameter ---
+
+$_cgrmanCompleter = {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+
+    @('builtins', 'tools') |
+        Where-Object { $_ -like "$wordToComplete*" } |
+        ForEach-Object {
+            [System.Management.Automation.CompletionResult]::new(
+                $_,
+                $_,
+                'ParameterValue',
+                $_
+            )
+        }
+}
+
+Register-ArgumentCompleter -CommandName 'Show-CongruensManual' -ParameterName 'Section' -ScriptBlock $_cgrmanCompleter
+Register-ArgumentCompleter -CommandName 'cgrman' -ParameterName 'Section' -ScriptBlock $_cgrmanCompleter

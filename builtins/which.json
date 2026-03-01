@@ -1,0 +1,7 @@
+{
+  "name": "which",
+  "description": "Find the location of a command (works with aliases, functions, and executables)",
+  "usage": [
+    { "command": "which <command>", "info": "Show the source/path of the command" }
+  ]
+}

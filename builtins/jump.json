@@ -1,0 +1,10 @@
+{
+  "name": "jump",
+  "description": "Directory bookmarking: save, list, and jump to bookmarked paths",
+  "usage": [
+    { "command": "jump", "info": "List all saved bookmarks" },
+    { "command": "jump <alias>", "info": "cd to the bookmarked directory" },
+    { "command": "setjump <alias>", "info": "Bookmark the current directory under <alias>" },
+    { "command": "deljump <alias>", "info": "Remove a bookmark" }
+  ]
+}

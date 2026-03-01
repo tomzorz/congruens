@@ -61,7 +61,10 @@ function Show-Motd {
         "Use 'cgrenv show' to list all environment variables.",
         "Use 'cgrenv addsession <name> <value>' to set a session env variable.",
         "Use 'cgrenv addpermanent <name> <value>' to persist an env variable.",
-        "Use 'll' for enhanced directory listing with eza."
+        "Use 'll' for enhanced directory listing with eza.",
+        "Use 'setjump <alias>' to bookmark the current directory.",
+        "Use 'jump <alias>' to jump to a bookmarked directory.",
+        "Use 'jump' with no args to list all your bookmarks."
     )
     
     $tipIndex = Get-Random -Maximum $tips.Count
