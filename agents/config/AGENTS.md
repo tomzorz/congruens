@@ -41,6 +41,11 @@
 ## Tooling & Workflow
 
 - If a command runs longer than 5 minutes, stop it, capture the context, and discuss the timeout with the user before retrying.
+- **Null device per shell context (Windows)**. The null device is different depending on which shell is executing the command. Getting this wrong on Windows creates undeletable files:
+  - **PowerShell**: `> $null` or `2> $null`
+  - **CMD / batch**: `> NUL` or `2> NUL`
+  - **git-bash / MSYS2**: `> /dev/null` or `2> /dev/null`
+  - **NEVER** use `2>nul` in git-bash. MSYS2 does not translate `nul` to the Windows NUL device. It creates a literal file named `nul`, which is a reserved device name on Windows and cannot be deleted through normal means (Explorer, `rm`, `del` all fail). If this happens, the only known fix is Python: `ctypes.windll.kernel32.DeleteFileW("\\\\?\\<absolute-path>\\nul")`.
 
 ## Testing Philosophy
 
