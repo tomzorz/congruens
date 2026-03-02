@@ -428,8 +428,12 @@ print_step "Configuring shell auto-launch..."
 
 PWSH_LAUNCH_BLOCK='
 # Congruens: Auto-launch PowerShell
-# Only launch if this is an interactive shell and pwsh is available
-if [[ $- == *i* ]] && command -v pwsh &> /dev/null; then
+# Only launch if this is an interactive shell and pwsh is available.
+# Skip when running inside an IDE integrated terminal (VSCode, JetBrains)
+# because exec replaces the shell process and breaks IDE shell integration.
+if [[ $- == *i* ]] && command -v pwsh &> /dev/null \
+    && [[ "$TERM_PROGRAM" != "vscode" ]] \
+    && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]]; then
     exec pwsh
 fi'
 

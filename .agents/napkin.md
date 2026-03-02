@@ -13,9 +13,11 @@
 
 ## Patterns That Don't Work (Install Scripts)
 - Bootstrap scripts append `exec pwsh` to .zshrc/.bashrc. Any env var exports added after that block never run because exec replaces the shell. The agents/install.sh set_env_var function must insert before the auto-launch block, not blindly append.
+- `exec pwsh` in rc files hijacks IDE integrated terminals (VSCode, JetBrains). Guard with TERM_PROGRAM and TERMINAL_EMULATOR checks.
 - `https://aka.ms/powershell-release?tag=stable` redirect is unreliable on macOS. Use `https://github.com/PowerShell/PowerShell/releases/latest` instead (GitHub's own redirect, always works).
 
 ## Patterns That Work
+- IDE terminal detection: `TERM_PROGRAM=vscode` for VSCode, `TERMINAL_EMULATOR=JetBrains-JediTerm` for JetBrains. Both set before rc files are sourced. Use as guards in auto-launch blocks.
 - `Register-ArgumentCompleter` with `CompletionResult::new(text, listText, type, tooltip)` for rich tab completion
 - Storing completers in the same .ps1 file as the functions they complete (keeps things cohesive)
 - Using `ConvertFrom-Json -AsHashtable` for JSON config files (returns mutable hashtable, not PSCustomObject)
