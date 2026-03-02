@@ -8,7 +8,7 @@ function Initialize-ReadLine {
         Import-Module PSReadLine -ErrorAction SilentlyContinue
         $module = Get-Module PSReadLine -ErrorAction SilentlyContinue
     }
-    if (-not $module) return
+    if (-not $module) { return }
 
     # -- Editing mode ----------------------------------------------------------
     # Emacs mode: Ctrl+A/E for home/end, Ctrl+K to kill line, etc.
