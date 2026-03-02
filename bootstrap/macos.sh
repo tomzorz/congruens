@@ -125,10 +125,9 @@ if command -v pwsh &> /dev/null; then
 else
     print_info "Installing PowerShell from GitHub releases..."
 
-    # Follow the stable release redirect to discover the latest version tag.
-    # https://aka.ms/powershell-release?tag=stable redirects to the GitHub
-    # releases page for the latest stable PowerShell version.
-    RELEASE_URL=$(curl -sIL -o /dev/null -w '%{url_effective}' "https://aka.ms/powershell-release?tag=stable")
+    # Follow the GitHub "latest" redirect to discover the latest stable tag.
+    # This reliably resolves to e.g. .../releases/tag/v7.5.4
+    RELEASE_URL=$(curl -sIL -o /dev/null -w '%{url_effective}' "https://github.com/PowerShell/PowerShell/releases/latest")
 
     if [[ -z "$RELEASE_URL" ]]; then
         print_failure "Could not resolve PowerShell release URL"
