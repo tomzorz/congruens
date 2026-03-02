@@ -1,9 +1,10 @@
 {
   "name": "cgrman",
-  "description": "Interactive browser for Congruens commands and tool definitions",
+  "description": "Interactive browser for Congruens commands, tools, and dev environments",
   "usage": [
     { "command": "cgrman", "info": "Show available subcommands" },
     { "command": "cgrman builtins", "info": "Browse built-in Congruens commands" },
-    { "command": "cgrman tools", "info": "Browse external tool definitions" }
+    { "command": "cgrman tools", "info": "Browse external tool definitions" },
+    { "command": "cgrman devenvs", "info": "Browse dev environment definitions" }
   ]
 }

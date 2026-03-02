@@ -39,7 +39,7 @@ function Show-CongruensManual {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
-        [ValidateSet('builtins', 'tools')]
+        [ValidateSet('builtins', 'tools', 'devenvs')]
         [string]$Section
     )
 
@@ -53,6 +53,7 @@ function Show-CongruensManual {
     switch ($Section) {
         'builtins' { Show-BuiltinBrowser -CongruensRoot $congruensRoot }
         'tools' { Show-ToolBrowser -CongruensRoot $congruensRoot }
+        'devenvs' { Show-DevEnvBrowser -CongruensRoot $congruensRoot }
     }
 }
 
@@ -63,6 +64,7 @@ function Show-ManualHelp {
 
     $builtinsPath = Join-Path $CongruensRoot "builtins"
     $toolsPath = Join-Path $CongruensRoot "tools"
+    $devenvPath = Join-Path $CongruensRoot "devenvs"
 
     $builtinCount = 0
     if (Test-Path $builtinsPath) {
@@ -71,6 +73,10 @@ function Show-ManualHelp {
     $toolCount = 0
     if (Test-Path $toolsPath) {
         $toolCount = (Get-ChildItem -Path $toolsPath -Filter "*.json" | Measure-Object).Count
+    }
+    $devenvCount = 0
+    if (Test-Path $devenvPath) {
+        $devenvCount = (Get-ChildItem -Path $devenvPath -Filter "*.json" | Measure-Object).Count
     }
 
     Write-Host ""
@@ -82,6 +88,8 @@ function Show-ManualHelp {
     Write-Host "    Browse built-in commands ($builtinCount)" -ForegroundColor Gray
     Write-Host "    cgrman tools" -ForegroundColor Yellow -NoNewline
     Write-Host "       Browse external tools ($toolCount)" -ForegroundColor Gray
+    Write-Host "    cgrman devenvs" -ForegroundColor Yellow -NoNewline
+    Write-Host "     Browse dev environments ($devenvCount)" -ForegroundColor Gray
     Write-Host ""
     Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
 
@@ -111,6 +119,27 @@ function Show-ManualHelp {
         Write-Host " (run " -ForegroundColor DarkGray -NoNewline
         Write-Host "cgrman tools" -ForegroundColor Yellow -NoNewline
         Write-Host " to browse)" -ForegroundColor DarkGray
+    }
+
+    # Quick summary of devenvs
+    if ($devenvCount -gt 0) {
+        Write-Host ""
+        Write-Host "  Dev environments:" -ForegroundColor White
+        $devenvFiles = Get-ChildItem -Path $devenvPath -Filter "*.json" | Sort-Object Name
+        foreach ($file in $devenvFiles) {
+            try {
+                $devenv = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                Write-Host "    $($devenv.name)" -ForegroundColor Yellow -NoNewline
+                $padding = ' ' * [Math]::Max(1, 14 - $devenv.name.Length)
+                Write-Host "$padding$($devenv.description)" -ForegroundColor Gray
+            }
+            catch {
+                Write-Warning "  Failed to parse $($file.Name): $_"
+            }
+        }
+        Write-Host ""
+        Write-Host "    Install with: " -ForegroundColor DarkGray -NoNewline
+        Write-Host "cgrinstall <name>" -ForegroundColor Yellow
     }
 
     Write-Host ""
@@ -188,6 +217,42 @@ function Show-ToolBrowser {
     Start-InteractiveBrowser -Entries $entries -Category 'external'
 }
 
+# --- Private: interactive TUI for dev environments ---
+
+function Show-DevEnvBrowser {
+    param([string]$CongruensRoot)
+
+    $devenvPath = Join-Path $CongruensRoot "devenvs"
+    $entries = @()
+
+    if (Test-Path $devenvPath) {
+        $files = Get-ChildItem -Path $devenvPath -Filter "*.json" | Sort-Object Name
+        foreach ($file in $files) {
+            try {
+                $devenv = Get-Content $file.FullName -Raw | ConvertFrom-Json
+                $entries += [PSCustomObject]@{
+                    Name        = $devenv.name
+                    Description = $devenv.description
+                    Homepage    = $devenv.homepage
+                    Verify      = $devenv.verify
+                    Install     = $devenv.install
+                    Env         = $devenv.env
+                }
+            }
+            catch {
+                Write-Warning "Failed to parse $($file.Name): $_"
+            }
+        }
+    }
+
+    if ($entries.Count -eq 0) {
+        Write-Error "No devenv definitions found in devenvs/"
+        return
+    }
+
+    Start-InteractiveBrowser -Entries $entries -Category 'devenv'
+}
+
 # --- Private: shared interactive TUI ---
 
 function Start-InteractiveBrowser {
@@ -252,11 +317,10 @@ function Render-Entry {
 
     Write-Host "  $($entry.Name)" -ForegroundColor Yellow -NoNewline
     Write-Host "  ($($Index + 1)/$total)" -ForegroundColor DarkGray -NoNewline
-    if ($Category -eq 'builtin') {
-        Write-Host "  [built-in]" -ForegroundColor Green
-    }
-    else {
-        Write-Host "  [external tool]" -ForegroundColor Magenta
+    switch ($Category) {
+        'builtin' { Write-Host "  [built-in]" -ForegroundColor Green }
+        'external' { Write-Host "  [external tool]" -ForegroundColor Magenta }
+        'devenv' { Write-Host "  [dev environment]" -ForegroundColor Blue }
     }
 
     Write-Host ""
@@ -273,6 +337,69 @@ function Render-Entry {
             Write-Host "      $($u.Info)" -ForegroundColor Gray
             Write-Host ""
         }
+    }
+    elseif ($Category -eq 'devenv') {
+        if ($entry.Homepage) {
+            Write-Host "  Homepage: " -ForegroundColor DarkGray -NoNewline
+            Write-Host "$($entry.Homepage)" -ForegroundColor Blue
+        }
+
+        if ($entry.Verify) {
+            Write-Host "  Verify:   " -ForegroundColor DarkGray -NoNewline
+            Write-Host "$($entry.Verify)" -ForegroundColor Gray
+        }
+
+        Write-Host ""
+        Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+        Write-Host "  Install scripts:" -ForegroundColor DarkGray
+        Write-Host ""
+
+        foreach ($plat in @('windows', 'macos', 'linux')) {
+            $platInstall = $entry.Install.$plat
+            if ($platInstall -and $platInstall.script) {
+                $label = switch ($plat) { 'windows' { 'Windows' } 'macos' { 'macOS' } 'linux' { 'Linux' } }
+                Write-Host "    ${label}:" -ForegroundColor Magenta
+                foreach ($step in $platInstall.script) {
+                    Write-Host "      $step" -ForegroundColor White
+                }
+            }
+        }
+
+        # Show env vars if any platform has them
+        $hasEnv = $false
+        foreach ($plat in @('windows', 'macos', 'linux')) {
+            $platEnv = $entry.Env.$plat
+            if ($platEnv) {
+                $envProps = $platEnv | Get-Member -MemberType NoteProperty
+                if ($envProps.Count -gt 0) { $hasEnv = $true; break }
+            }
+        }
+
+        if ($hasEnv) {
+            Write-Host ""
+            Write-Host "  ────────────────────────────────────────────────────────" -ForegroundColor DarkGray
+            Write-Host "  Environment variables:" -ForegroundColor DarkGray
+            Write-Host ""
+
+            foreach ($plat in @('windows', 'macos', 'linux')) {
+                $platEnv = $entry.Env.$plat
+                if (-not $platEnv) { continue }
+                $envProps = $platEnv | Get-Member -MemberType NoteProperty
+                if ($envProps.Count -eq 0) { continue }
+
+                $label = switch ($plat) { 'windows' { 'Windows' } 'macos' { 'macOS' } 'linux' { 'Linux' } }
+                Write-Host "    ${label}:" -ForegroundColor Magenta
+                foreach ($prop in $envProps) {
+                    Write-Host "      $($prop.Name)" -ForegroundColor Yellow -NoNewline
+                    Write-Host " = " -ForegroundColor DarkGray -NoNewline
+                    Write-Host "$($platEnv.$($prop.Name))" -ForegroundColor White
+                }
+            }
+        }
+
+        Write-Host ""
+        Write-Host "  Install: " -ForegroundColor DarkGray -NoNewline
+        Write-Host "cgrinstall $($entry.Name)" -ForegroundColor Cyan
     }
     else {
         if ($entry.Homepage) {
@@ -343,7 +470,7 @@ function cgrman {
     [CmdletBinding()]
     param(
         [Parameter(Position = 0)]
-        [ValidateSet('builtins', 'tools')]
+        [ValidateSet('builtins', 'tools', 'devenvs')]
         [string]$Section
     )
 
@@ -355,7 +482,7 @@ function cgrman {
 $_cgrmanCompleter = {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
 
-    @('builtins', 'tools') |
+    @('builtins', 'devenvs', 'tools') |
         Where-Object { $_ -like "$wordToComplete*" } |
         ForEach-Object {
             [System.Management.Automation.CompletionResult]::new(

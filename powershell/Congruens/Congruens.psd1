@@ -37,7 +37,11 @@
         # Tool wrappers
         'Invoke-Eza',
 
+        # Dev environment installer
+        'Install-CongruensDevEnv',
+
         # Aliases (exported as functions)
+        'cgrinstall',
         'mkcd',
         'which',
         'll',

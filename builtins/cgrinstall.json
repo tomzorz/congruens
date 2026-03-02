@@ -1,0 +1,12 @@
+{
+  "name": "cgrinstall",
+  "description": "Install development environments from devenvs/*.json definitions",
+  "usage": [
+    { "command": "cgrinstall -List", "info": "Show available devenvs and install status" },
+    { "command": "cgrinstall dotnet", "info": "Install the .NET SDK" },
+    { "command": "cgrinstall python", "info": "Install Python with uv package manager" },
+    { "command": "cgrinstall node", "info": "Install Node.js with nvm" },
+    { "command": "cgrinstall <name> -Force", "info": "Reinstall even if already present" },
+    { "command": "cgrinstall <name> -DryRun", "info": "Preview install steps without running them" }
+  ]
+}

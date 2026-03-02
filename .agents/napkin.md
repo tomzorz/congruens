@@ -21,7 +21,7 @@
 - Using `ConvertFrom-Json -AsHashtable` for JSON config files (returns mutable hashtable, not PSCustomObject)
 - `TabExpansion2` for testing completers programmatically without needing an interactive terminal
 - pwsh `-File -` with heredoc `<<'PWSH'` to avoid bash interpolation issues with `$_`
-- JSON metadata files for dynamic discovery (builtins/*.json, tools/*.json) instead of hardcoded lists in code
+- JSON metadata files for dynamic discovery (builtins/*.json, tools/*.json, devenvs/*.json) instead of hardcoded lists in code
 - PSReadLine config as Private/ function called from .psm1 at import time (session-level setup inside module scope)
 
 ## Patterns That Don't Work
@@ -36,7 +36,9 @@
 - Module path: `powershell/Congruens/`, loaded via `profile.ps1` which adds to `$env:PSModulePath`
 - Auto-sources all `*.ps1` from `Private/` then `Public/` directories
 - Tools catalog lives in `tools/*.json` (38 external tool definitions)
-- Built-in command metadata lives in `builtins/*.json` (9 command definitions)
-- `cgrman` has subcommands: `builtins` and `tools` (bare `cgrman` shows summary index)
+- Built-in command metadata lives in `builtins/*.json` (10 command definitions, including cgrinstall)
+- `cgrman` has subcommands: `builtins`, `tools`, and `devenvs` (bare `cgrman` shows summary index)
+- `cgrinstall` installs devenvs by name from `devenvs/*.json` definitions (supports -List, -Force, -DryRun)
+- Devenv JSON schema: `install.<platform>.script` (array of commands), `env.<platform>` (map of env vars), `verify`, `homepage`
 - Platform detection via private helpers: `Test-IsWindows`, `Test-IsMac`, `Test-IsLinux`, `Get-Platform`
 - Module loads from repo in-place (no copy step), so new commands are available after `Import-Module -Force`
