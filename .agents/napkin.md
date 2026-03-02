@@ -26,6 +26,7 @@
 
 ## Patterns That Don't Work
 - PowerShell `if` always requires braces: `if ($x) { return }` not `if ($x) return`. The parser rejects braceless bodies, unlike C#/bash.
+- PSReadLine on macOS/Linux crashes with IOException if `/tmp/.dotnet/shm` doesn't exist. .NET named mutexes require it. Pre-create the dir before PSReadLine init.
 - Passing PowerShell scripts with `$_` via bash `-Command` flag (bash eats the `$_` before pwsh sees it)
 - `2>nul` in git-bash on Windows creates a literal file named `nul`. Use `2>/dev/null` instead.
 - `sed -i` is not portable across macOS/Linux. BSD sed (macOS) requires `sed -i '' "expr"`, GNU sed (Linux) requires `sed -i "expr"`. Use a `_sed_i` wrapper that checks `uname` to pick the right form.

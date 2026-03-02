@@ -3,6 +3,15 @@
 # history search, and predictive IntelliSense to PowerShell natively.
 
 function Initialize-ReadLine {
+    # .NET named mutexes need /tmp/.dotnet/shm on macOS/Linux.
+    # If it's missing, PSReadLine crashes on history-file init.
+    if (-not $IsWindows) {
+        $shmPath = '/tmp/.dotnet/shm'
+        if (-not (Test-Path $shmPath)) {
+            New-Item -ItemType Directory -Path $shmPath -Force | Out-Null
+        }
+    }
+
     $module = Get-Module PSReadLine -ErrorAction SilentlyContinue
     if (-not $module) {
         Import-Module PSReadLine -ErrorAction SilentlyContinue
