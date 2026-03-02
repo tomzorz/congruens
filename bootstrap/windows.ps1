@@ -246,8 +246,6 @@ if ($fontInstalled) {
             Write-Host "   Installing via winget..." -ForegroundColor Gray
             $null = winget install --id "DEVCOM.JetBrainsMonoNerdFont" --source winget --silent --accept-package-agreements --accept-source-agreements 2>&1
             # Note: winget package for CaskaydiaCove may vary, trying common alternatives
-            $null = winget install --id "chrisant996.Clink" --source winget --silent 2>&1  # This is a placeholder
-            
             # Download and install manually as winget font packages can be unreliable
             Write-Host "   Downloading CaskaydiaCove Nerd Font..." -ForegroundColor Gray
             $fontUrl = "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.4.0/CascadiaCode.zip"

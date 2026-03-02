@@ -22,3 +22,6 @@ if (Test-Path $PublicPath) {
 
 # Create aliases
 Set-Alias -Name 'open' -Value 'Open-Path' -Scope Global
+
+# Configure PSReadLine (bash-like editing, tab completion, history search)
+if (Get-Module PSReadLine -ErrorAction SilentlyContinue) { Initialize-ReadLine }

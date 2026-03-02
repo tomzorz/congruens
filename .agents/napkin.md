@@ -18,6 +18,7 @@
 - `TabExpansion2` for testing completers programmatically without needing an interactive terminal
 - pwsh `-File -` with heredoc `<<'PWSH'` to avoid bash interpolation issues with `$_`
 - JSON metadata files for dynamic discovery (builtins/*.json, tools/*.json) instead of hardcoded lists in code
+- PSReadLine config as Private/ function called from .psm1 at import time (session-level setup inside module scope)
 
 ## Patterns That Don't Work
 - Passing PowerShell scripts with `$_` via bash `-Command` flag (bash eats the `$_` before pwsh sees it)
