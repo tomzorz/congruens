@@ -102,6 +102,15 @@ create_symlink() {
     fi
 }
 
+# Portable in-place sed (BSD sed on macOS requires -i '', GNU sed does not)
+_sed_i() {
+    if [[ "$(uname)" == "Darwin" ]]; then
+        sed -i '' "$@"
+    else
+        sed -i "$@"
+    fi
+}
+
 # Add env var to shell profile
 set_env_var() {
     local var_name="$1"
@@ -126,17 +135,26 @@ set_env_var() {
         if $DRY_RUN; then
             log_info "Would update $var_name in $shell_rc"
         else
-            sed -i "s|^export ${var_name}=.*|${export_line}|" "$shell_rc"
+            _sed_i "s|^export ${var_name}=.*|${export_line}|" "$shell_rc"
             log_success "Updated $var_name in $shell_rc"
         fi
     else
         if $DRY_RUN; then
             log_info "Would add to $shell_rc: $export_line"
         else
-            echo "" >> "$shell_rc"
-            echo "# OpenCode config directory (added by congruens)" >> "$shell_rc"
-            echo "$export_line" >> "$shell_rc"
-            log_success "Added $var_name to $shell_rc"
+            # Insert before the PowerShell auto-launch block if present.
+            # The bootstrap scripts add an "exec pwsh" block that replaces the
+            # shell, so any exports appended after it would never be evaluated.
+            local insert_text="\n# OpenCode config directory (added by congruens)\n${export_line}"
+            if grep -q "Congruens: Auto-launch PowerShell" "$shell_rc" 2>/dev/null; then
+                _sed_i "/# Congruens: Auto-launch PowerShell/i\\${insert_text}" "$shell_rc"
+                log_success "Added $var_name to $shell_rc (before PowerShell auto-launch)"
+            else
+                echo "" >> "$shell_rc"
+                echo "# OpenCode config directory (added by congruens)" >> "$shell_rc"
+                echo "$export_line" >> "$shell_rc"
+                log_success "Added $var_name to $shell_rc"
+            fi
         fi
     fi
 }

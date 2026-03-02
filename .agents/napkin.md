@@ -11,6 +11,9 @@
 - Wrapper functions must redeclare parameter attributes (ValidateSet, etc.) because aliases don't carry them
 - Private helpers in the same .ps1 file are fine (they don't get exported if not in the manifest)
 
+## Patterns That Don't Work (Install Scripts)
+- Bootstrap scripts append `exec pwsh` to .zshrc/.bashrc. Any env var exports added after that block never run because exec replaces the shell. The agents/install.sh set_env_var function must insert before the auto-launch block, not blindly append.
+
 ## Patterns That Work
 - `Register-ArgumentCompleter` with `CompletionResult::new(text, listText, type, tooltip)` for rich tab completion
 - Storing completers in the same .ps1 file as the functions they complete (keeps things cohesive)
@@ -23,6 +26,7 @@
 ## Patterns That Don't Work
 - Passing PowerShell scripts with `$_` via bash `-Command` flag (bash eats the `$_` before pwsh sees it)
 - `2>nul` in git-bash on Windows creates a literal file named `nul`. Use `2>/dev/null` instead.
+- `sed -i` is not portable across macOS/Linux. BSD sed (macOS) requires `sed -i '' "expr"`, GNU sed (Linux) requires `sed -i "expr"`. Use a `_sed_i` wrapper that checks `uname` to pick the right form.
 
 ## Domain Notes
 - Congruens is a cross-platform CLI experience module (PowerShell 7+)
