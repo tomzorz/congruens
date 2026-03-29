@@ -40,8 +40,12 @@
         # Dev environment installer
         'Install-CongruensDevEnv',
 
+        # Security
+        'Invoke-TirithCommand',
+
         # Aliases (exported as functions)
         'cgrinstall',
+        'tirith-check',
         'mkcd',
         'which',
         'll',

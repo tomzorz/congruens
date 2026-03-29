@@ -6,7 +6,7 @@
 .DESCRIPTION
     Automates Windows machine setup:
     1. Check prerequisites (PowerShell 7)
-    2. Install Chocolatey and/or ensure winget is available
+    2. Ensure package managers are available (winget, Scoop, Chocolatey)
     3. Read tool definitions from tools/*.json
     4. Install each tool using first available package manager
     5. Wire $PROFILE to source repo profile
@@ -71,7 +71,24 @@ $hasWinget = $null -ne (Get-Command winget -ErrorAction SilentlyContinue)
 if ($hasWinget) {
     Write-Success "winget is available"
 } else {
-    Write-Warning "winget not found - will use Chocolatey only"
+    Write-Warning "winget not found"
+}
+
+# Check for Scoop
+$hasScoop = $null -ne (Get-Command scoop -ErrorAction SilentlyContinue)
+if ($hasScoop) {
+    Write-Success "Scoop is available"
+} else {
+    Write-Host "   Installing Scoop..." -ForegroundColor Gray
+    try {
+        Set-ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        Invoke-RestMethod -Uri 'https://get.scoop.sh' | Invoke-Expression
+        $hasScoop = $true
+        Write-Success "Scoop installed"
+    }
+    catch {
+        Write-Warning "Failed to install Scoop: $_"
+    }
 }
 
 # Check for Chocolatey
@@ -92,8 +109,8 @@ if ($hasChoco) {
     }
 }
 
-if (-not $hasWinget -and -not $hasChoco) {
-    Write-Failure "No package manager available. Please install winget or Chocolatey manually."
+if (-not $hasWinget -and -not $hasScoop -and -not $hasChoco) {
+    Write-Failure "No package manager available. Please install winget, Scoop, or Chocolatey manually."
     exit 1
 }
 
@@ -143,6 +160,18 @@ if (-not $SkipTools) {
                     $null = winget install --id $windowsInstall.winget --silent --accept-package-agreements --accept-source-agreements 2>&1
                     if ($LASTEXITCODE -eq 0) {
                         Write-Host " OK (winget)" -ForegroundColor Green
+                        $installed = $true
+                    }
+                }
+                catch { }
+            }
+
+            # Fall back to scoop
+            if (-not $installed -and $hasScoop -and $windowsInstall.scoop) {
+                try {
+                    scoop install $windowsInstall.scoop 2>&1 | Out-Null
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host " OK (scoop)" -ForegroundColor Green
                         $installed = $true
                     }
                 }

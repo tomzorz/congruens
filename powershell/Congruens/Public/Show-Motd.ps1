@@ -41,11 +41,15 @@ function Show-Motd {
     Write-Host " (run `cgrman` for help)" -ForegroundColor DarkGray
     Write-Host ""
 
-    # Run fastfetch if available and not skipped
+    # Run fastfetch if available and not skipped (kill it if it takes over 1s)
     if (-not $SkipFastfetch) {
         $fastfetchCmd = Get-Command fastfetch -ErrorAction SilentlyContinue
         if ($fastfetchCmd) {
-            & fastfetch
+            $proc = Start-Process -FilePath $fastfetchCmd.Source -NoNewWindow -PassThru
+            if (-not $proc.WaitForExit(1000)) {
+                $proc.Kill()
+                Write-Host "   fastfetch timed out" -ForegroundColor DarkGray
+            }
             Write-Host ""
         }
     }

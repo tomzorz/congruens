@@ -20,5 +20,10 @@ if (Test-Path $themePath) {
     oh-my-posh init pwsh --config $themePath | Invoke-Expression
 }
 
+# Initialize tirith shell hook (terminal security guard)
+if (Get-Command tirith -ErrorAction SilentlyContinue) {
+    tirith init --shell pwsh | Invoke-Expression
+}
+
 # Show Message of the Day
 Show-Motd

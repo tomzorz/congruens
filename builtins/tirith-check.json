@@ -1,0 +1,16 @@
+{
+  "name": "tirith-check",
+  "description": "Terminal security guard: detects homograph attacks, pipe-to-shell exploits, ANSI injection, credential leaks, and other threats",
+  "usage": [
+    { "command": "tirith-check check -- <cmd>", "info": "Analyze a command without executing it" },
+    { "command": "tirith-check scan [path]", "info": "Scan files/directories for hidden content" },
+    { "command": "tirith-check score <url>", "info": "Trust-signal breakdown for a URL" },
+    { "command": "tirith-check diff <url>", "info": "Byte-level diff showing suspicious characters" },
+    { "command": "tirith-check run <url>", "info": "Safe replacement for curl | bash" },
+    { "command": "tirith-check paste", "info": "Analyze pasted content for threats" },
+    { "command": "tirith-check why", "info": "Explain the last triggered rule" },
+    { "command": "tirith-check fetch <url>", "info": "Detect server-side cloaking" },
+    { "command": "tirith-check checkpoint", "info": "Snapshot files before risky operations" },
+    { "command": "tirith-check doctor", "info": "Run a diagnostic health check" }
+  ]
+}

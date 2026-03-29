@@ -1,0 +1,20 @@
+{
+  "name": "tirith",
+  "description": "Terminal security guard: detects homograph attacks, pipe-to-shell exploits, ANSI injection, and credential leaks",
+  "homepage": "https://github.com/sheeki03/tirith",
+  "install": {
+    "windows": {
+      "scoop": "tirith",
+      "cargo": "tirith"
+    },
+    "macos": {
+      "brew": "sheeki03/tap/tirith",
+      "cargo": "tirith"
+    },
+    "linux": {
+      "brew": "sheeki03/tap/tirith",
+      "cargo": "tirith"
+    }
+  },
+  "verify": "tirith --version"
+}
