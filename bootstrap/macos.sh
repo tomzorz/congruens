@@ -295,41 +295,125 @@ print_step "Configuring shell auto-launch..."
 # Add PowerShell auto-launch to shell rc files
 # This makes pwsh start automatically when opening a terminal
 
-PWSH_LAUNCH_BLOCK='
+# Auto-launch blocks defer `exec pwsh` via the shell's pre-prompt hook.
+# Why: third-party installers (Bun, Homebrew, nvm, asdf, ...) append their
+# own `export PATH=...` lines to ~/.zshrc or ~/.bashrc AFTER our block.
+# If we ran `exec pwsh` inline those exports would never evaluate, and the
+# launched PowerShell would inherit an incomplete PATH. The hook runs once,
+# right before the first interactive prompt, so the whole rc file is
+# evaluated first.
+#
+# Guards skip IDE integrated terminals (VSCode, JetBrains) and JetBrains'
+# headless env-import pass. Keep the exact marker string below unchanged,
+# other installers grep for it to anchor their edits.
+
+read -r -d '' PWSH_LAUNCH_ZSH_BLOCK <<'ZSHBLOCK' || true
+
 # Congruens: Auto-launch PowerShell
-# Only launch if this is an interactive shell and pwsh is available.
-# Skip when running inside an IDE integrated terminal (VSCode, JetBrains)
-# because exec replaces the shell process and breaks IDE shell integration.
-# Also skip when JetBrains reads this file in the background to import env
-# vars (INTELLIJ_ENVIRONMENT_READER is set during that process).
-if [[ $- == *i* ]] && command -v pwsh &> /dev/null \
-    && [[ "$TERM_PROGRAM" != "vscode" ]] \
-    && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
-    && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-    exec pwsh
-fi'
+# Deferred via precmd hook so third-party exports appended later in this rc
+# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
+_congruens_launch_pwsh() {
+    add-zsh-hook -d precmd _congruens_launch_pwsh 2>/dev/null
+    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
+        && [[ "$TERM_PROGRAM" != "vscode" ]] \
+        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
+        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+        exec pwsh
+    fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _congruens_launch_pwsh
+ZSHBLOCK
+
+read -r -d '' PWSH_LAUNCH_BASH_BLOCK <<'BASHBLOCK' || true
+
+# Congruens: Auto-launch PowerShell
+# Deferred via PROMPT_COMMAND so third-party exports appended later in this rc
+# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
+_congruens_launch_pwsh() {
+    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh;/}"
+    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh/}"
+    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
+        && [[ "$TERM_PROGRAM" != "vscode" ]] \
+        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
+        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+        exec pwsh
+    fi
+}
+PROMPT_COMMAND="_congruens_launch_pwsh;${PROMPT_COMMAND:-}"
+BASHBLOCK
+
+# Detect an earlier bare-`exec pwsh` block so we can migrate it. The old block
+# had `exec pwsh` inside the guard; the new hooked block defines
+# `_congruens_launch_pwsh` instead.
+_has_old_autolaunch() {
+    local rc_file="$1"
+    [[ -f "$rc_file" ]] || return 1
+    grep -q "Congruens: Auto-launch PowerShell" "$rc_file" || return 1
+    ! grep -q "_congruens_launch_pwsh" "$rc_file"
+}
+
+# Strip the old block: from the marker line through the closing `fi`.
+# Portable sed handled via inline awk to keep macOS/Linux the same.
+_strip_old_autolaunch() {
+    local rc_file="$1"
+    local tmp
+    tmp="$(mktemp)"
+    awk '
+        /# Congruens: Auto-launch PowerShell/ { skipping = 1; next }
+        skipping && /^fi$/ { skipping = 0; next }
+        !skipping { print }
+    ' "$rc_file" > "$tmp" && mv "$tmp" "$rc_file"
+}
 
 configure_shell_rc() {
     local rc_file="$1"
     local shell_name="$2"
-    
-    if [[ -f "$rc_file" ]]; then
-        if grep -q "Congruens: Auto-launch PowerShell" "$rc_file"; then
-            print_success "$shell_name already configured ($rc_file)"
-            return
-        fi
+    local block="$3"
+
+    if _has_old_autolaunch "$rc_file"; then
+        _strip_old_autolaunch "$rc_file"
+        print_info "Migrated old auto-launch block in $rc_file"
     fi
-    
-    # Append the auto-launch block
-    echo "$PWSH_LAUNCH_BLOCK" >> "$rc_file"
+
+    if [[ -f "$rc_file" ]] && grep -q "_congruens_launch_pwsh" "$rc_file"; then
+        print_success "$shell_name already configured ($rc_file)"
+        return
+    fi
+
+    printf '%s\n' "$block" >> "$rc_file"
     print_success "Configured $shell_name to auto-launch PowerShell ($rc_file)"
 }
 
+# On macOS, login bash shells (Terminal.app default) read ~/.bash_profile and
+# do NOT source ~/.bashrc automatically. If other installers write exports to
+# ~/.bashrc, they'd be invisible. Make .bash_profile source .bashrc so exports
+# land in one file but apply to both shells.
+ensure_bash_profile_sources_bashrc() {
+    local profile="$HOME/.bash_profile"
+    local marker="# Congruens: source ~/.bashrc"
+    [[ -f "$profile" ]] || touch "$profile"
+    if grep -q "$marker" "$profile"; then
+        return
+    fi
+    cat >> "$profile" <<'BP'
+
+# Congruens: source ~/.bashrc
+# Login bash shells on macOS don't read .bashrc by default. Source it so env
+# exports written by installers land in one place but apply everywhere.
+if [[ -f "$HOME/.bashrc" ]]; then
+    . "$HOME/.bashrc"
+fi
+BP
+    print_success "Configured ~/.bash_profile to source ~/.bashrc"
+}
+
 # Configure for bash (default on older macOS)
-configure_shell_rc "$HOME/.bash_profile" "bash"
+ensure_bash_profile_sources_bashrc
+configure_shell_rc "$HOME/.bash_profile" "bash" "$PWSH_LAUNCH_BASH_BLOCK"
 
 # Configure for zsh (default on macOS Catalina+)
-configure_shell_rc "$HOME/.zshrc" "zsh"
+configure_shell_rc "$HOME/.zshrc" "zsh" "$PWSH_LAUNCH_ZSH_BLOCK"
 
 # ============================================================================
 # oh-my-posh Configuration
@@ -459,6 +543,8 @@ echo "       \"terminal.integrated.fontFamily\": \"CaskaydiaCove Nerd Font\""
 echo ""
 echo -e "\033[33mNote:\033[0m"
 echo "  PowerShell auto-launches via ~/.zshrc and ~/.bash_profile"
+echo "  (deferred until just before the first prompt, so installer PATH"
+echo "   exports written later in those files still take effect)"
 echo "  To get a native bash/zsh shell, run: bash --norc  or  zsh --norcs"
 echo ""
 echo -e "\033[33mAvailable commands (in PowerShell):\033[0m"

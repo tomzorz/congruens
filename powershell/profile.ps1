@@ -5,7 +5,7 @@
 # Resolve paths relative to this script's location (powershell/ directory)
 $congruensRoot = Split-Path -Parent $PSScriptRoot
 
-# Add module path
+# Ensure this repo's module path is discoverable
 $modulePath = $PSScriptRoot
 if ($env:PSModulePath -notlike "*$modulePath*") {
     $env:PSModulePath = "$modulePath$([IO.Path]::PathSeparator)$env:PSModulePath"

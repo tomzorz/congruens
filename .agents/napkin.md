@@ -25,6 +25,7 @@
 - pwsh `-File -` with heredoc `<<'PWSH'` to avoid bash interpolation issues with `$_`
 - JSON metadata files for dynamic discovery (builtins/*.json, tools/*.json, devenvs/*.json) instead of hardcoded lists in code
 - PSReadLine config as Private/ function called from .psm1 at import time (session-level setup inside module scope)
+- ~~When zsh auto-launches PowerShell via `exec pwsh`, shell-specific PATH entries like `~/.bun/bin` may not survive unless `powershell/profile.ps1` reconstructs them.~~ **CORRECTED 2026-04-20**: `exec pwsh` does inherit exported env. The real issue is ordering: third-party installers (Bun, etc.) append exports to `~/.zshrc` *after* the auto-launch block, so they never run. Fix is generic, not Bun-specific: defer `exec pwsh` via `precmd` (zsh) / `PROMPT_COMMAND` (bash) so the whole rc file is sourced first.
 
 ## Patterns That Don't Work
 - PowerShell `if` always requires braces: `if ($x) { return }` not `if ($x) return`. The parser rejects braceless bodies, unlike C#/bash.
@@ -44,3 +45,19 @@
 - Devenv JSON schema: `install.<platform>.script` (array of commands), `env.<platform>` (map of env vars), `verify`, `homepage`
 - Platform detection via private helpers: `Test-IsWindows`, `Test-IsMac`, `Test-IsLinux`, `Get-Platform`
 - Module loads from repo in-place (no copy step), so new commands are available after `Import-Module -Force`
+
+## Patterns That Don't Work (Shell Startup & PATH)
+- `exec pwsh` in `~/.zshrc` without guards hijacks IDE terminals (VSCode, JetBrains). Guard with `[[ -z "$TERM_PROGRAM" && -z "$TERMINAL_EMULATOR" ]]`.
+- Env var exports after `exec pwsh` in `~/.zshrc` never run because exec replaces the shell process. Move all exports before exec or set them in PowerShell's profile.
+- PowerShell doesn't inherit zsh's PATH when launched via `exec pwsh`. PowerShell starts with a fresh environment. Must set up Homebrew/Bun paths in PowerShell's profile (`~/.config/powershell/profile.ps1`).
+- Bun's `source ~/.bun/_bun` in `~/.zshrc` can hang if `~/.bun` has insecure permissions (world/group writable). Fix: `chmod 755 ~/.bun && chmod 755 ~/.bun/bin`.
+
+## Patterns That Work (Shell Startup & PATH)
+- Guard `exec pwsh` with IDE terminal detection: `if [[ -z "$TERM_PROGRAM" && -z "$TERMINAL_EMULATOR" ]]; then exec pwsh; fi`
+- Set up Homebrew in PowerShell profile: `$brewPrefix = if (Test-Path /opt/homebrew) { '/opt/homebrew' } else { '/usr/local' }; $env:PATH = "$brewPrefix/bin:$brewPrefix/sbin:$env:PATH"`
+- Set up Bun in PowerShell profile: `$env:BUN_INSTALL = "$env:HOME/.bun"; $env:PATH = "$env:BUN_INSTALL/bin:$env:PATH"`
+- zsh startup order for login shells: `/etc/zshenv` → `~/.zshenv` → `/etc/zprofile` → `~/.zprofile` → `/etc/zshrc` → `~/.zshrc` → `/etc/zlogin` → `~/.zlogin`. Anything after `exec pwsh` in `~/.zshrc` never runs.
+- IDE terminals are non-login shells: `~/.zprofile` doesn't run, but `~/.zshrc` does. Use `TERM_PROGRAM` and `TERMINAL_EMULATOR` to detect and guard auto-launch blocks.
+- Defer `exec pwsh` via `precmd` (zsh) / `PROMPT_COMMAND` (bash) instead of running it inline. Lets installer exports (Bun, Homebrew, nvm) appended later in the rc file process first. Hook fires once just before the first prompt, then unregisters itself and execs. Works for both login and non-login interactive shells, unlike `~/.zlogin`.
+- macOS login bash shells (Terminal.app default) read `~/.bash_profile` but NOT `~/.bashrc`. If installers write to `.bashrc` and you exec from `.bash_profile`, exports are invisible. Source `.bashrc` from `.bash_profile` to unify.
+- Bootstrap migrations: when changing the shape of an injected rc-file block, detect the OLD shape with a unique grep (e.g. presence of marker but absence of new function name) and strip it via `awk` before appending the new shape. Do NOT just `grep -q marker; skip` because that leaves users stuck on the old behavior after pulling.

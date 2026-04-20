@@ -426,42 +426,95 @@ print_step "Configuring shell auto-launch..."
 # Add PowerShell auto-launch to shell rc files
 # This makes pwsh start automatically when opening a terminal
 
-PWSH_LAUNCH_BLOCK='
+# Auto-launch blocks defer `exec pwsh` via the shell's pre-prompt hook.
+# Third-party installers (Bun, Homebrew on Linux, nvm, asdf, ...) append
+# their own `export PATH=...` lines to ~/.zshrc or ~/.bashrc AFTER our
+# block. If we ran `exec pwsh` inline those exports would never evaluate
+# and PowerShell would inherit an incomplete PATH. The hook runs once,
+# just before the first interactive prompt, after the whole rc file is
+# evaluated. Keep the marker string unchanged: other installers grep for it.
+
+read -r -d '' PWSH_LAUNCH_ZSH_BLOCK <<'ZSHBLOCK' || true
+
 # Congruens: Auto-launch PowerShell
-# Only launch if this is an interactive shell and pwsh is available.
-# Skip when running inside an IDE integrated terminal (VSCode, JetBrains)
-# because exec replaces the shell process and breaks IDE shell integration.
-# Also skip when JetBrains reads this file in the background to import env
-# vars (INTELLIJ_ENVIRONMENT_READER is set during that process).
-if [[ $- == *i* ]] && command -v pwsh &> /dev/null \
-    && [[ "$TERM_PROGRAM" != "vscode" ]] \
-    && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
-    && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-    exec pwsh
-fi'
+# Deferred via precmd hook so third-party exports appended later in this rc
+# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
+_congruens_launch_pwsh() {
+    add-zsh-hook -d precmd _congruens_launch_pwsh 2>/dev/null
+    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
+        && [[ "$TERM_PROGRAM" != "vscode" ]] \
+        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
+        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+        exec pwsh
+    fi
+}
+autoload -Uz add-zsh-hook
+add-zsh-hook precmd _congruens_launch_pwsh
+ZSHBLOCK
+
+read -r -d '' PWSH_LAUNCH_BASH_BLOCK <<'BASHBLOCK' || true
+
+# Congruens: Auto-launch PowerShell
+# Deferred via PROMPT_COMMAND so third-party exports appended later in this rc
+# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
+_congruens_launch_pwsh() {
+    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh;/}"
+    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh/}"
+    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
+        && [[ "$TERM_PROGRAM" != "vscode" ]] \
+        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
+        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
+        exec pwsh
+    fi
+}
+PROMPT_COMMAND="_congruens_launch_pwsh;${PROMPT_COMMAND:-}"
+BASHBLOCK
+
+# Old block (pre-hook) had a bare `exec pwsh` inside the guard. The new one
+# defines `_congruens_launch_pwsh`. Detect and migrate.
+_has_old_autolaunch() {
+    local rc_file="$1"
+    [[ -f "$rc_file" ]] || return 1
+    grep -q "Congruens: Auto-launch PowerShell" "$rc_file" || return 1
+    ! grep -q "_congruens_launch_pwsh" "$rc_file"
+}
+
+_strip_old_autolaunch() {
+    local rc_file="$1"
+    local tmp
+    tmp="$(mktemp)"
+    awk '
+        /# Congruens: Auto-launch PowerShell/ { skipping = 1; next }
+        skipping && /^fi$/ { skipping = 0; next }
+        !skipping { print }
+    ' "$rc_file" > "$tmp" && mv "$tmp" "$rc_file"
+}
 
 configure_shell_rc() {
     local rc_file="$1"
     local shell_name="$2"
-    
-    if [[ -f "$rc_file" ]]; then
-        if grep -q "Congruens: Auto-launch PowerShell" "$rc_file"; then
-            print_success "$shell_name already configured ($rc_file)"
-            return
-        fi
+    local block="$3"
+
+    if _has_old_autolaunch "$rc_file"; then
+        _strip_old_autolaunch "$rc_file"
+        print_info "Migrated old auto-launch block in $rc_file"
     fi
-    
-    # Append the auto-launch block
-    echo "$PWSH_LAUNCH_BLOCK" >> "$rc_file"
+
+    if [[ -f "$rc_file" ]] && grep -q "_congruens_launch_pwsh" "$rc_file"; then
+        print_success "$shell_name already configured ($rc_file)"
+        return
+    fi
+
+    printf '%s\n' "$block" >> "$rc_file"
     print_success "Configured $shell_name to auto-launch PowerShell ($rc_file)"
 }
 
 # Configure for bash (most common default on Linux)
-configure_shell_rc "$HOME/.bashrc" "bash"
+configure_shell_rc "$HOME/.bashrc" "bash" "$PWSH_LAUNCH_BASH_BLOCK"
 
 # Configure for zsh (if installed)
 if command -v zsh &> /dev/null; then
-    configure_shell_rc "$HOME/.zshrc" "zsh"
+    configure_shell_rc "$HOME/.zshrc" "zsh" "$PWSH_LAUNCH_ZSH_BLOCK"
 fi
 
 # ============================================================================
@@ -627,6 +680,8 @@ echo "       \"terminal.integrated.fontFamily\": \"CaskaydiaCove Nerd Font\""
 echo ""
 echo -e "\033[33mNote:\033[0m"
 echo "  PowerShell auto-launches via ~/.bashrc (and ~/.zshrc if zsh is installed)"
+echo "  (deferred until just before the first prompt, so installer PATH"
+echo "   exports written later in those files still take effect)"
 echo "  To get a native bash/zsh shell, run: bash --norc  or  zsh --norcs"
 echo ""
 echo -e "\033[33mAvailable commands (in PowerShell):\033[0m"
