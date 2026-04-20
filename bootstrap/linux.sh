@@ -431,9 +431,12 @@ PWSH_LAUNCH_BLOCK='
 # Only launch if this is an interactive shell and pwsh is available.
 # Skip when running inside an IDE integrated terminal (VSCode, JetBrains)
 # because exec replaces the shell process and breaks IDE shell integration.
+# Also skip when JetBrains reads this file in the background to import env
+# vars (INTELLIJ_ENVIRONMENT_READER is set during that process).
 if [[ $- == *i* ]] && command -v pwsh &> /dev/null \
     && [[ "$TERM_PROGRAM" != "vscode" ]] \
-    && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]]; then
+    && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
+    && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
     exec pwsh
 fi'
 

@@ -58,23 +58,53 @@
 
 ### C#
 
-- **Brace style**: For single-line branches (if, else, foreach, etc.), omit braces and keep the statement inline on the same line. For multi-line branches, always use braces on new lines (Allman style).
+- **Ternary over if-else**: Prefer `? :` conditional expressions over declaring a variable then assigning it in if/else branches. If the ternary becomes unreadable (deeply nested, very long), break it across lines or fall back to if/else.
   ```csharp
-  // Single-line: no braces, inline
+  // Good: ternary assignment
+  var label = isActive ? "Active" : "Inactive";
+
+  // Bad: unnecessary if-else for a simple assignment
+  string label;
+  if (isActive)
+      label = "Active";
+  else
+      label = "Inactive";
+  ```
+- **Brace style**: Single-statement branches (if, else, for, foreach, etc.) go on the same line with no braces. If the body goes on a separate line, it MUST have braces (Allman style). Never a bare statement on its own line without braces.
+  ```csharp
+  // Good: single statement, same line, no braces
   if (condition) return value;
   if (x > 0) DoSomething();
-  
-  // Multi-line: braces on new lines
+  foreach (var item in items) Process(item);
+
+  // Good: multi-line body, always braces (Allman)
   if (condition)
   {
       DoFirstThing();
       DoSecondThing();
   }
+
+  // Bad: separate line without braces (dangling statement)
+  if (condition)
+      DoSomething();
   ```
 - Prefer strong types over strings; use enums and record types when the domain is closed or needs validation.
 - Handle exceptions properly; avoid swallowing exceptions without logging or rethrowing.
 - Prefer `async`/`await` over blocking calls like `.Result` or `.Wait()`.
 - Use `var` when the type is obvious from the right-hand side; use explicit types when it aids readability.
+- **XML doc style**: Always use multi-line `<summary>` tags with the opening and closing tags on their own lines. Never use single-line `<summary>Text</summary>`.
+  ```csharp
+  // Good: tags on separate lines
+  /// <summary>
+  /// Registers all platform services. Call this once from Program.cs.
+  /// </summary>
+  public static void AddPlatformServices(this IServiceCollection services)
+
+  // Bad: single-line summary
+  /// <summary>Registers all platform services.</summary>
+  public static void AddPlatformServices(this IServiceCollection services)
+  ```
+- **`<inheritdoc />`**: Only use on methods that actually override a base class or implement an interface. Never use on constructors or methods that have no parent definition to inherit from.
 
 #### C# Workflow Checklist
 
