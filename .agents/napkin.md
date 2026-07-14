@@ -35,6 +35,8 @@
 - `sed -i` is not portable across macOS/Linux. BSD sed (macOS) requires `sed -i '' "expr"`, GNU sed (Linux) requires `sed -i "expr"`. Use a `_sed_i` wrapper that checks `uname` to pick the right form.
 
 ## Domain Notes
+- Agent skills live in `agents/config/skills/<name>/SKILL.md` (frontmatter: name, description, author: congruens, version, date). NOT in `.github/skills` or user dir directly.
+- `agents/install.ps1` symlinks `agents/config/skills` → `~/.agents/skills` and `~/.claude/skills`.
 - Congruens is a cross-platform CLI experience module (PowerShell 7+)
 - Module path: `powershell/Congruens/`, loaded via `profile.ps1` which adds to `$env:PSModulePath`
 - Auto-sources all `*.ps1` from `Private/` then `Public/` directories
