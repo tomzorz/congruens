@@ -13,6 +13,7 @@
 - When facing a technical unknown, use the Spike skill: define the question, set a timebox (max 20 min), investigate, and record findings as a sticky note with a go/no-go verdict. Don't guess when you can spike.
 - Use the Visual Explainer skill when generating diagrams, architecture overviews, diff reviews, plan reviews, or any visual explanation of technical concepts. Also use it proactively when you are about to render a complex ASCII table (4+ rows or 3+ columns), generate an HTML page instead and open it in the browser.
 - Use the Humanizer skill whenever you are writing longer prose that is not code (documentation, READMEs, commit descriptions, explanations, summaries, blog-style text, etc.). Run your draft through the humanizer patterns to strip AI-isms before presenting it. Code comments and short inline replies are exempt.
+- Write specifications in Lojbanlite, our controlled English for specs. Use the Lojbanlite skill to draft them, and to rework any spec that does not obey the rules. See "Specification Writing" below for what counts as a specification.
 - Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
 - Shipping C# changes: run `dotnet format` and ensure the build passes with no warnings before handing off.
@@ -38,6 +39,25 @@
 - If code is very confusing or hard to understand:
   1. Try to simplify it.
   1. Add an ASCII art diagram in a code comment if it would help.
+
+## Specification Writing
+
+Specifications are written in **Lojbanlite**, our controlled English where every normative sentence
+has exactly one reading. The full rule set, workflow, and rationale live in the Lojbanlite skill.
+This section only tells you when to invoke it.
+
+**Lojbanlite applies to**: requirements, acceptance criteria, design and interface specs, API
+contracts in prose, procedures, runbooks, safety and rollback instructions, and the normative parts
+of an ADR.
+
+**It does not apply to**: code, comments, commit messages, PR descriptions, READMEs, tutorials,
+chat, quoted text, or error output.
+
+**Never run Lojbanlite and the Humanizer on the same text.** Specs get Lojbanlite, narrative prose
+gets the Humanizer. They pull in opposite directions by design.
+
+When a spec does not obey the rules, do not argue about it in review. Run the skill and present the
+rework, the violated rule IDs, and the list of ambiguities the original left unresolved.
 
 ## Tooling & Workflow
 
