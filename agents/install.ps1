@@ -160,8 +160,22 @@ function Install-AgentConfigs {
     Write-Host "Claude Code:"
     New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'skills') -Target (Join-Path $HOME '.claude\skills') | Out-Null
     New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'agents') -Target (Join-Path $HOME '.claude\agents') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'claude-settings.json') -Target (Join-Path $HOME '.claude\settings.json') | Out-Null
-    $agentsMd = Join-Path $DotfilesDir 'AGENTS.md'
+    # settings.json is per-machine: permissions and enabled plugins differ by host.
+    # Seed it once as a real file, then never touch it again. Do NOT symlink -
+    # New-SymbolicLinkSafe force-removes an existing target, which would silently
+    # destroy a machine's local permission rules.
+    $claudeSettings = Join-Path $HOME '.claude\settings.json'
+    if (Test-Path $claudeSettings) {
+        Write-Info "Kept existing: $claudeSettings (per-machine, not managed by congruens)"
+    } elseif ($DryRun) {
+        Write-Info "Would seed: $claudeSettings (copy, not symlink)"
+    } else {
+        Copy-Item -Path (Join-Path $ConfigDir 'claude-settings.json') -Destination $claudeSettings
+        Write-Success "Seeded: $claudeSettings (copy - edit locally, will not be overwritten)"
+    }
+    # AGENTS.md lives in the config dir alongside the skills and agent definitions,
+    # not at the repo root. Pointing at the root made both symlinks silently skip.
+    $agentsMd = Join-Path $ConfigDir 'AGENTS.md'
     if (Test-Path $agentsMd) {
         New-SymbolicLinkSafe -Source $agentsMd -Target (Join-Path $HOME '.claude\CLAUDE.md') | Out-Null
     }

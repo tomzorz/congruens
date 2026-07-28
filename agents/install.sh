@@ -191,16 +191,16 @@ main() {
     create_symlink "$CONFIG_DIR/agents" "$HOME/.claude/agents" || true
     create_symlink "$CONFIG_DIR/claude-settings.json" "$HOME/.claude/settings.json" || true
     # CLAUDE.md is the Claude Code equivalent of AGENTS.md
-    if [[ -f "$DOTFILES_DIR/AGENTS.md" ]]; then
-        create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md" || true
+    if [[ -f "$CONFIG_DIR/AGENTS.md" ]]; then
+        create_symlink "$CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md" || true
     fi
     echo ""
 
     # Agent Skills standard symlinks
     echo "Agent Skills Standard:"
     create_symlink "$CONFIG_DIR/skills" "$HOME/.agents/skills" || true
-    if [[ -f "$DOTFILES_DIR/AGENTS.md" ]]; then
-        create_symlink "$DOTFILES_DIR/AGENTS.md" "$HOME/.agents/AGENTS.md" || true
+    if [[ -f "$CONFIG_DIR/AGENTS.md" ]]; then
+        create_symlink "$CONFIG_DIR/AGENTS.md" "$HOME/.agents/AGENTS.md" || true
     fi
     echo ""
 
