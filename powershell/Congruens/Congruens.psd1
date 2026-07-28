@@ -40,11 +40,17 @@
         # Dev environment installer
         'Install-CongruensDevEnv',
 
+        # Self-managed tools (GitHub releases)
+        'Install-CongruensTool',
+        'Update-CongruensTool',
+
         # Security
         'Invoke-TirithCommand',
 
         # Aliases (exported as functions)
         'cgrinstall',
+        'cgrtool',
+        'cgrupdate',
         'tirith-check',
         'mkcd',
         'which',

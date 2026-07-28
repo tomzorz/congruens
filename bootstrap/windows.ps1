@@ -134,14 +134,24 @@ if (-not $SkipTools) {
         $toolFiles = Get-ChildItem -Path $toolsPath -Filter "*.json"
         $totalTools = $toolFiles.Count
         $currentTool = 0
+        $hasSelfManaged = $false
 
         foreach ($toolFile in $toolFiles) {
             $currentTool++
             $tool = Get-Content $toolFile.FullName | ConvertFrom-Json
             $toolName = $tool.name
-            
+
             Write-Host "   [$currentTool/$totalTools] $toolName..." -NoNewline -ForegroundColor Gray
-            
+
+            # Self-managed tools are handled after this loop by the Congruens
+            # module, so there is one implementation of the download/checksum
+            # logic instead of one per platform bootstrap.
+            if ($tool.install.windows.github) {
+                Write-Host " self-managed (handled below)" -ForegroundColor DarkGray
+                $hasSelfManaged = $true
+                continue
+            }
+
             # Check if already installed via verify command
             if ($tool.verify) {
                 $verifyCmd = $tool.verify -split ' ' | Select-Object -First 1
@@ -190,8 +200,38 @@ if (-not $SkipTools) {
                 catch { }
             }
 
+            # Fall back to cargo for Rust tools with no package on this platform
+            if (-not $installed -and $windowsInstall.cargo -and (Get-Command cargo -ErrorAction SilentlyContinue)) {
+                try {
+                    cargo install --quiet $windowsInstall.cargo 2>&1 | Out-Null
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host " OK (cargo)" -ForegroundColor Green
+                        $installed = $true
+                    }
+                }
+                catch { }
+            }
+
             if (-not $installed) {
                 Write-Host " SKIP (no package available)" -ForegroundColor Yellow
+            }
+        }
+
+        # Self-managed tools: delegate to the Congruens module so the download,
+        # checksum and PATH logic lives in exactly one place.
+        if ($hasSelfManaged) {
+            Write-Step "Installing self-managed tools (GitHub releases)..."
+            try {
+                $psModuleDir = Join-Path $repoRoot 'powershell'
+                if ($env:PSModulePath -notlike "*$psModuleDir*") {
+                    $env:PSModulePath = "$psModuleDir$([IO.Path]::PathSeparator)$env:PSModulePath"
+                }
+                Import-Module Congruens -Force -ErrorAction Stop
+                Install-CongruensTool -All
+            }
+            catch {
+                Write-Warning "Self-managed tool install failed: $_"
+                Write-Warning "Run 'cgrtool -All' after restarting your shell."
             }
         }
     }

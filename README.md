@@ -52,16 +52,22 @@ congruens/
 ├── powershell/           # PowerShell module and profile
 │   ├── profile.ps1       # Thin loader sourced by $PROFILE
 │   └── Congruens/        # PowerShell module with cross-platform commands
+│       ├── Private/      # Internal helpers (platform detection, PSReadLine)
+│       └── Public/       # Exported commands (auto-sourced at import)
 ├── omp/                  # oh-my-posh configuration
 │   └── congruens.omp.json
-├── tools/                # Declarative tool definitions (JSON)
+├── builtins/             # Metadata for the module's own commands (JSON, feeds cgrman)
+├── tools/                # Declarative external tool definitions (JSON)
 ├── devenvs/              # Development environment definitions (JSON)
 ├── bootstrap/            # Platform-specific bootstrap scripts
 ├── agents/               # AI agent configurations (portable across tools)
 │   ├── config/           # Config dir (OPENCODE_CONFIG_DIR points here)
+│   │   ├── skills/       # Shared agent skills
+│   │   └── agents/       # Shared subagent definitions
 │   ├── install.sh/.ps1   # Agent setup scripts
 │   └── settings_plan.md  # Permission guidelines for tool configs
-└── config/               # Configuration files
+├── guides/               # Long-form notes and write-ups
+└── config/               # Configuration files (defaults + gitignored local override)
 ```
 
 ## How It Works
@@ -80,20 +86,62 @@ This loads the Congruens module and initializes oh-my-posh. All customization li
 
 The Congruens module provides commands that abstract platform differences:
 
+**Files and navigation**
+
 | Command | Description |
 |---------|-------------|
 | `ll [path]` | Enhanced directory listing using eza (long format) |
-| `mkcd <dir>` | Create directory and cd into it |
+| `mkcd <dir>` | Create directory (including parents) and cd into it |
 | `open [path]` | Open in file explorer (Explorer/Finder/xdg-open) |
 | `which <cmd>` | Find command location (works with aliases/functions) |
-| `cgrpath show` | Display PATH entries, one per line |
+| `jump` | List all saved directory bookmarks |
+| `jump <alias>` | cd to a bookmarked directory |
+| `setjump <alias>` | Bookmark the current directory |
+| `deljump <alias>` | Remove a bookmark |
+
+**PATH and environment**
+
+| Command | Description |
+|---------|-------------|
+| `cgrpath show` | Display PATH entries, one per line with index |
 | `cgrpath addsession <dir>` | Add directory to current session PATH |
 | `cgrpath addpermanent <dir>` | Add directory to PATH permanently |
 | `cgrpath remove <dir>` | Remove directory from session PATH |
-| `cgrenv show` | Display all environment variables |
-| `cgrenv show <name>` | Display a specific environment variable |
+| `cgrenv show [name]` | Display all environment variables, or a specific one |
 | `cgrenv addsession <name> <value>` | Set an environment variable for the current session |
 | `cgrenv addpermanent <name> <value>` | Set an environment variable permanently |
+
+**Discovery and setup**
+
+| Command | Description |
+|---------|-------------|
+| `cgrman` | Show available subcommands |
+| `cgrman builtins` | Browse built-in Congruens commands |
+| `cgrman tools` | Browse external tool definitions |
+| `cgrman devenvs` | Browse dev environment definitions |
+| `cgrinstall -List` | Show available devenvs and install status |
+| `cgrinstall <name>` | Install a dev environment (`-Force`, `-DryRun` supported) |
+| `cgrtool <name>` | Install a self-managed tool from its GitHub release |
+| `cgrtool -All` | Install every self-managed tool for this platform |
+| `cgrupdate` | Update all self-managed tools |
+| `cgrupdate <name>` | Update one self-managed tool |
+| `cgrupdate -List` | Show self-managed tools and install status |
+| `motd` | Show the welcome banner and fastfetch system info |
+
+**Security**
+
+| Command | Description |
+|---------|-------------|
+| `tirith-check check -- <cmd>` | Analyze a command without executing it |
+| `tirith-check run <url>` | Safe replacement for `curl \| bash` |
+| `tirith-check scan [path]` | Scan files/directories for hidden content |
+| `tirith-check score <url>` | Trust-signal breakdown for a URL |
+
+`tirith-check` wraps [tirith](https://github.com/sheeki03/tirith) and has more subcommands than
+listed here -- run `cgrman builtins` for the full set.
+
+Metadata for every built-in lives in `builtins/*.json`, which is what `cgrman` reads. Adding a
+command means adding a JSON file, not editing a list in code.
 
 ### Tool Definitions
 
@@ -112,7 +160,74 @@ Each file in `tools/` declares how to install a tool on each platform:
 }
 ```
 
-Bootstrap scripts read these definitions and use the first available package manager.
+Bootstrap scripts read these definitions and use the first available package manager. Which keys
+are honoured depends on the platform: Windows tries `winget`, then `scoop`, then `choco`; macOS
+uses `brew`; Linux uses whichever of `apt`/`dnf`/`pacman` it detected.
+
+**Installs are one-shot.** Before installing, the bootstrap runs the first word of `verify` through
+a command lookup, and skips the tool entirely if it resolves. Re-running bootstrap therefore
+installs what is missing and never upgrades what is present -- updating installed tools is left to
+each package manager (`winget upgrade`, `brew upgrade`, and so on). The exception is self-managed
+tools, below.
+
+### Self-Managed Tools
+
+Some tools ship releases faster than any package manager follows. yt-dlp is the clearest case: it
+publishes fixes almost daily, and `yt-dlp -U` **refuses to run** once it detects a package-manager
+install, telling you to update through that manager instead. So the winget copy doesn't merely lag,
+it disables the updater you actually want.
+
+For those tools, congruens owns the binary. Declare a `github` block instead of package manager
+keys:
+
+```json
+{
+  "name": "yt-dlp",
+  "install": {
+    "windows": {
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp.exe",
+        "assetArm64": "yt-dlp_arm64.exe",
+        "checksums": "SHA2-256SUMS"
+      }
+    },
+    "linux": {
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp_linux",
+        "as": "yt-dlp",
+        "checksums": "SHA2-256SUMS"
+      }
+    }
+  },
+  "selfUpdate": "yt-dlp -U",
+  "verify": "yt-dlp --version"
+}
+```
+
+| Key | Meaning |
+|-----|---------|
+| `repo` | GitHub `owner/name` |
+| `asset` | Release asset filename (x64, or universal) |
+| `assetArm64` | Optional asset used when running on arm64 |
+| `as` | Optional local filename, for assets with a platform suffix |
+| `checksums` | Optional checksum asset; verified before the binary is placed |
+| `selfUpdate` | Optional command the tool provides to update itself |
+
+Binaries land in `~/.congruens/bin`, which `profile.ps1` **prepends** to PATH so a congruens-owned
+tool wins over a stale package-manager copy of the same name.
+
+`cgrtool` installs, `cgrupdate` updates. Updating prefers the tool's own `selfUpdate` command; for
+tools without one it re-downloads the asset and only replaces the binary if the contents actually
+changed. Everything goes through the `/releases/latest/download/` redirect, so no GitHub API calls
+are made and the unauthenticated 60-requests-per-hour limit never applies.
+
+Scope is deliberately narrow: **single-file assets only**. Archive extraction and arch-triple
+matching are not supported, because the tools that need same-day updates all ship plain binaries,
+and the tools that ship archives don't need daily updates. Declaring a `github` block also *replaces*
+the package manager keys for that platform rather than sitting alongside them -- otherwise you end up
+with two copies and PATH order silently decides which one runs.
 
 ### Development Environments
 

@@ -301,6 +301,7 @@ if [[ "$SKIP_TOOLS" == false ]]; then
         TOOL_FILES=("$TOOLS_PATH"/*.json)
         TOTAL_TOOLS=${#TOOL_FILES[@]}
         CURRENT_TOOL=0
+        HAS_SELF_MANAGED=false
 
         for TOOL_FILE in "${TOOL_FILES[@]}"; do
             ((CURRENT_TOOL++))
@@ -313,6 +314,8 @@ if [[ "$SKIP_TOOLS" == false ]]; then
                 DNF_PKG=$(jq -r '.install.linux.dnf // empty' "$TOOL_FILE")
                 PACMAN_PKG=$(jq -r '.install.linux.pacman // empty' "$TOOL_FILE")
                 BREW_PKG=$(jq -r '.install.linux.brew // empty' "$TOOL_FILE")
+                CARGO_PKG=$(jq -r '.install.linux.cargo // empty' "$TOOL_FILE")
+                GITHUB_REPO=$(jq -r '.install.linux.github.repo // empty' "$TOOL_FILE")
             elif command -v python3 &> /dev/null; then
                 TOOL_NAME=$(python3 -c "import json; print(json.load(open('$TOOL_FILE'))['name'])" 2>/dev/null || echo "unknown")
                 VERIFY_CMD=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('verify', ''))" 2>/dev/null || echo "")
@@ -320,12 +323,23 @@ if [[ "$SKIP_TOOLS" == false ]]; then
                 DNF_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('linux', {}).get('dnf', ''))" 2>/dev/null || echo "")
                 PACMAN_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('linux', {}).get('pacman', ''))" 2>/dev/null || echo "")
                 BREW_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('linux', {}).get('brew', ''))" 2>/dev/null || echo "")
+                CARGO_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('linux', {}).get('cargo', ''))" 2>/dev/null || echo "")
+                GITHUB_REPO=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('linux', {}).get('github', {}).get('repo', ''))" 2>/dev/null || echo "")
             else
                 print_warning "Neither jq nor python3 available for JSON parsing"
                 continue
             fi
 
             echo -n "   [$CURRENT_TOOL/$TOTAL_TOOLS] $TOOL_NAME..."
+
+            # Self-managed tools are handled after this loop by the Congruens
+            # module, so there is one implementation of the download/checksum
+            # logic instead of one per platform bootstrap.
+            if [[ -n "$GITHUB_REPO" ]]; then
+                echo -e " \033[90mself-managed (handled below)\033[0m"
+                HAS_SELF_MANAGED=true
+                continue
+            fi
 
             # Check if already installed
             if [[ -n "$VERIFY_CMD" ]]; then
@@ -374,10 +388,29 @@ if [[ "$SKIP_TOOLS" == false ]]; then
                 fi
             fi
 
+            # Fall back to cargo for Rust tools with no distro package
+            if [[ "$INSTALLED" == false ]] && [[ -n "$CARGO_PKG" ]] && command -v cargo &> /dev/null; then
+                if cargo install --quiet "$CARGO_PKG" 2>/dev/null; then
+                    echo -e " \033[32mOK (cargo)\033[0m"
+                    INSTALLED=true
+                fi
+            fi
+
             if [[ "$INSTALLED" == false ]]; then
                 echo -e " \033[33mSKIP (no package available)\033[0m"
             fi
         done
+
+        # Self-managed tools: delegate to the Congruens module so the download,
+        # checksum and PATH logic lives in exactly one place.
+        if [[ "$HAS_SELF_MANAGED" == true ]]; then
+            print_info "Installing self-managed tools (GitHub releases)..."
+            pwsh -NoProfile -Command "
+                \$env:PSModulePath = '$REPO_ROOT/powershell' + [IO.Path]::PathSeparator + \$env:PSModulePath
+                Import-Module Congruens -Force
+                Install-CongruensTool -All
+            " || print_warning "Self-managed tool install failed - run 'cgrtool -All' after restarting your shell"
+        fi
     fi
 fi
 

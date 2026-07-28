@@ -2,19 +2,34 @@
   "name": "yt-dlp",
   "description": "Feature-rich command-line audio/video downloader",
   "homepage": "https://github.com/yt-dlp/yt-dlp",
+  "comment": "Self-managed on purpose: yt-dlp ships fixes almost daily, and 'yt-dlp -U' refuses to run when it detects a package-manager install. Congruens owns the binary in ~/.congruens/bin so the built-in updater works.",
   "install": {
     "windows": {
-      "winget": "yt-dlp.yt-dlp",
-      "choco": "yt-dlp"
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp.exe",
+        "assetArm64": "yt-dlp_arm64.exe",
+        "checksums": "SHA2-256SUMS"
+      }
     },
     "macos": {
-      "brew": "yt-dlp"
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp_macos",
+        "as": "yt-dlp",
+        "checksums": "SHA2-256SUMS"
+      }
     },
     "linux": {
-      "apt": "yt-dlp",
-      "dnf": "yt-dlp",
-      "pacman": "yt-dlp"
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp_linux",
+        "assetArm64": "yt-dlp_linux_aarch64",
+        "as": "yt-dlp",
+        "checksums": "SHA2-256SUMS"
+      }
     }
   },
+  "selfUpdate": "yt-dlp -U",
   "verify": "yt-dlp --version"
 }

@@ -200,6 +200,7 @@ if [[ "$SKIP_TOOLS" == false ]]; then
         TOOL_FILES=("$TOOLS_PATH"/*.json)
         TOTAL_TOOLS=${#TOOL_FILES[@]}
         CURRENT_TOOL=0
+        HAS_SELF_MANAGED=false
 
         for TOOL_FILE in "${TOOL_FILES[@]}"; do
             ((CURRENT_TOOL++))
@@ -209,14 +210,27 @@ if [[ "$SKIP_TOOLS" == false ]]; then
                 TOOL_NAME=$(jq -r '.name' "$TOOL_FILE")
                 VERIFY_CMD=$(jq -r '.verify // empty' "$TOOL_FILE")
                 BREW_PKG=$(jq -r '.install.macos.brew // empty' "$TOOL_FILE")
+                CARGO_PKG=$(jq -r '.install.macos.cargo // empty' "$TOOL_FILE")
+                GITHUB_REPO=$(jq -r '.install.macos.github.repo // empty' "$TOOL_FILE")
             else
                 # Fallback to Python
                 TOOL_NAME=$(python3 -c "import json; print(json.load(open('$TOOL_FILE'))['name'])" 2>/dev/null || echo "unknown")
                 VERIFY_CMD=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('verify', ''))" 2>/dev/null || echo "")
                 BREW_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('macos', {}).get('brew', ''))" 2>/dev/null || echo "")
+                CARGO_PKG=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('macos', {}).get('cargo', ''))" 2>/dev/null || echo "")
+                GITHUB_REPO=$(python3 -c "import json; d=json.load(open('$TOOL_FILE')); print(d.get('install', {}).get('macos', {}).get('github', {}).get('repo', ''))" 2>/dev/null || echo "")
             fi
 
             echo -n "   [$CURRENT_TOOL/$TOTAL_TOOLS] $TOOL_NAME..."
+
+            # Self-managed tools are handled after this loop by the Congruens
+            # module, so there is one implementation of the download/checksum
+            # logic instead of one per platform bootstrap.
+            if [[ -n "$GITHUB_REPO" ]]; then
+                echo -e " \033[90mself-managed (handled below)\033[0m"
+                HAS_SELF_MANAGED=true
+                continue
+            fi
 
             # Check if already installed
             if [[ -n "$VERIFY_CMD" ]]; then
@@ -227,26 +241,46 @@ if [[ "$SKIP_TOOLS" == false ]]; then
                 fi
             fi
 
-            # Install via Homebrew
+            INSTALLED=false
+            ATTEMPTED=false
+
+            # Install via Homebrew (taps and casks both go through plain install)
             if [[ -n "$BREW_PKG" ]]; then
-                # Check if it's a cask (contains /)
-                if [[ "$BREW_PKG" == *"/"* ]] || brew info --cask "$BREW_PKG" &> /dev/null 2>&1; then
-                    if brew install "$BREW_PKG" --quiet 2>/dev/null; then
-                        echo -e " \033[32mOK (brew)\033[0m"
-                    else
-                        echo -e " \033[33mFAILED\033[0m"
-                    fi
-                else
-                    if brew install "$BREW_PKG" --quiet 2>/dev/null; then
-                        echo -e " \033[32mOK (brew)\033[0m"
-                    else
-                        echo -e " \033[33mFAILED\033[0m"
-                    fi
+                ATTEMPTED=true
+                if brew install "$BREW_PKG" --quiet 2>/dev/null; then
+                    echo -e " \033[32mOK (brew)\033[0m"
+                    INSTALLED=true
                 fi
-            else
-                echo -e " \033[33mSKIP (no brew package)\033[0m"
+            fi
+
+            # Fall back to cargo for Rust tools with no formula on this platform
+            if [[ "$INSTALLED" == false ]] && [[ -n "$CARGO_PKG" ]] && command -v cargo &> /dev/null; then
+                ATTEMPTED=true
+                if cargo install --quiet "$CARGO_PKG" 2>/dev/null; then
+                    echo -e " \033[32mOK (cargo)\033[0m"
+                    INSTALLED=true
+                fi
+            fi
+
+            if [[ "$INSTALLED" == false ]]; then
+                if [[ "$ATTEMPTED" == true ]]; then
+                    echo -e " \033[33mFAILED\033[0m"
+                else
+                    echo -e " \033[33mSKIP (no package available)\033[0m"
+                fi
             fi
         done
+
+        # Self-managed tools: delegate to the Congruens module so the download,
+        # checksum and PATH logic lives in exactly one place.
+        if [[ "$HAS_SELF_MANAGED" == true ]]; then
+            print_info "Installing self-managed tools (GitHub releases)..."
+            pwsh -NoProfile -Command "
+                \$env:PSModulePath = '$REPO_ROOT/powershell' + [IO.Path]::PathSeparator + \$env:PSModulePath
+                Import-Module Congruens -Force
+                Install-CongruensTool -All
+            " || print_warning "Self-managed tool install failed - run 'cgrtool -All' after restarting your shell"
+        fi
     fi
 fi
 

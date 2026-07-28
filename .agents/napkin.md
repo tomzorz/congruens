@@ -28,11 +28,32 @@
 - ~~When zsh auto-launches PowerShell via `exec pwsh`, shell-specific PATH entries like `~/.bun/bin` may not survive unless `powershell/profile.ps1` reconstructs them.~~ **CORRECTED 2026-04-20**: `exec pwsh` does inherit exported env. The real issue is ordering: third-party installers (Bun, etc.) append exports to `~/.zshrc` *after* the auto-launch block, so they never run. Fix is generic, not Bun-specific: defer `exec pwsh` via `precmd` (zsh) / `PROMPT_COMMAND` (bash) so the whole rc file is sourced first.
 
 ## Patterns That Don't Work
+- `Write-Host "text".PadRight(18)` does NOT call the method. In argument (command) parsing mode PowerShell treats the method call as literal text. Wrap it: `Write-Host ("text".PadRight(18))`. Same trap for any method call on a literal passed as an argument.
+- C-style `\"` escaping inside PowerShell double-quoted strings. The escape char is a backtick; for embedded double quotes use a single-quoted string instead.
 - PowerShell `if` always requires braces: `if ($x) { return }` not `if ($x) return`. The parser rejects braceless bodies, unlike C#/bash.
 - PSReadLine on macOS/Linux crashes with IOException if `/tmp/.dotnet/shm` doesn't exist. .NET named mutexes require it. Pre-create the dir before PSReadLine init.
 - Passing PowerShell scripts with `$_` via bash `-Command` flag (bash eats the `$_` before pwsh sees it)
 - `2>nul` in git-bash on Windows creates a literal file named `nul`. Use `2>/dev/null` instead.
 - `sed -i` is not portable across macOS/Linux. BSD sed (macOS) requires `sed -i '' "expr"`, GNU sed (Linux) requires `sed -i "expr"`. Use a `_sed_i` wrapper that checks `uname` to pick the right form.
+
+## Domain Notes (Tool Updates)
+- **Bootstrap is install-only by design.** All three scripts run the first word of `verify` through a command lookup and `continue` if it resolves. Re-running bootstrap never upgrades anything. This is intentional, not a bug -- don't "fix" it by removing the skip.
+- `config/congruens.defaults.json` has `settings.tools.autoUpdate` and `installMissing` keys that NOTHING reads. Dead config, present since early on. Same for `preferredPackageManager`.
+- `yt-dlp -U` refuses to run when it detects a package-manager install (winget/brew/pip) and tells you to use that manager instead. So the winget copy doesn't just lag behind daily releases, it disables the self-updater. This is why the `github` install method exists.
+- **`github` install method** (added 2026-07-27): tools/*.json can declare `install.<platform>.github` = `{repo, asset, assetArm64?, as?, checksums?}` plus a top-level `selfUpdate`. Binary goes to `~/.congruens/bin`, which `profile.ps1` PREPENDS to PATH so it beats a package-manager copy. Implemented once in `powershell/Congruens/Public/Install-CongruensTool.ps1`; the three bootstrap scripts detect the key, skip the tool in their own loop, and shell out to `pwsh -NoProfile` to call `Install-CongruensTool -All`. Do not reimplement download logic in bash.
+- Scope is single-file assets only. No archive extraction, no arch-triple matching beyond an optional `assetArm64`. Deliberate: daily-release tools ship plain binaries.
+- Known gap: `tools/tirith.json` declares `"cargo"` on all platforms but no bootstrap reads a `cargo` key. macOS bootstrap reads ONLY `.install.macos.brew`; Linux reads only apt/dnf/pacman/brew; Windows reads winget/scoop/choco. Any other key is silently ignored and the tool prints SKIP.
+
+## Patterns That Work (GitHub Release Downloads)
+- Use `https://github.com/<owner>/<repo>/releases/latest/download/<asset>` -- a plain redirect, no API call, so the unauthenticated 60-req/hr GitHub API limit never applies. Only hit `api.github.com` if you genuinely need release metadata.
+- To detect "already up to date" without a version state file: download to temp, compare `Get-FileHash` of temp vs the installed binary, discard if identical. Removes an entire class of state-tracking bugs.
+- Checksum files (`SHA2-256SUMS` etc.) are `<hash>  <filename>` -- split on `\s+` with a max of 2 parts, match on filename.
+- Set `$ProgressPreference = 'SilentlyContinue'` around `Invoke-WebRequest -OutFile` or the progress bar makes large downloads dramatically slower in PS7.
+
+## Domain Notes (Agents Config)
+- **AGENTS.md was never actually being linked** (found and fixed 2026-07-27). Both `agents/install.ps1` and `agents/install.sh` looked for `$DotfilesDir/AGENTS.md` (repo root), but the file lives at `agents/config/AGENTS.md`. Both call sites guard with a file-exists check, so the symlink silently no-op'd and `~/.claude/CLAUDE.md` never existed. Lesson: a `if (Test-Path X) { link }` guard turns a wrong path into silence, not an error. When adding a guarded symlink, log the skip.
+- Specifications in this repo are written in **Lojbanlite** (the `lojbanlite` skill plus the "Specification Writing" section of AGENTS.md).
+- Lojbanlite and the Humanizer skill are mutually exclusive: Lojbanlite for specs, Humanizer for narrative prose. Never both on one text.
 
 ## Domain Notes
 - Agent skills live in `agents/config/skills/<name>/SKILL.md` (frontmatter: name, description, author: congruens, version, date). NOT in `.github/skills` or user dir directly.

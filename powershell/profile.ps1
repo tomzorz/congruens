@@ -11,6 +11,14 @@ if ($env:PSModulePath -notlike "*$modulePath*") {
     $env:PSModulePath = "$modulePath$([IO.Path]::PathSeparator)$env:PSModulePath"
 }
 
+# Self-managed tools (cgrtool / cgrupdate) live here. Prepended rather than
+# appended so a congruens-owned binary wins over a stale package-manager copy
+# of the same tool -- which is the whole point of managing it ourselves.
+$congruensBin = Join-Path (Join-Path $HOME '.congruens') 'bin'
+if ((Test-Path $congruensBin) -and ($env:PATH -notlike "*$congruensBin*")) {
+    $env:PATH = "$congruensBin$([IO.Path]::PathSeparator)$env:PATH"
+}
+
 # Import module
 Import-Module Congruens -ErrorAction SilentlyContinue
 

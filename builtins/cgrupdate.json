@@ -1,0 +1,13 @@
+{
+  "name": "cgrupdate",
+  "description": "Update self-managed tools installed straight from GitHub releases",
+  "usage": [
+    { "command": "cgrupdate", "info": "Update every self-managed tool" },
+    { "command": "cgrupdate <name>", "info": "Update a single tool" },
+    { "command": "cgrupdate -List", "info": "Show self-managed tools and install status" },
+    { "command": "cgrupdate -DryRun", "info": "Show what would be updated without changing anything" },
+    { "command": "cgrtool <name>", "info": "Install a self-managed tool into ~/.congruens/bin" },
+    { "command": "cgrtool -All", "info": "Install every self-managed tool for this platform" },
+    { "command": "cgrtool <name> -Force", "info": "Re-download even if already present" }
+  ]
+}

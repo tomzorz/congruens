@@ -106,6 +106,55 @@ Windows).
 - Run `cgrman tools` and browse to it.
 - Run the bootstrap script to confirm it installs (or skips if already present).
 
+## Adding a self-managed tool (GitHub releases)
+
+Use this instead of package manager keys when a tool releases faster than winget/brew/apt can
+follow, or ships its own updater that refuses to run on package-manager installs (yt-dlp).
+
+```json
+{
+  "name": "yt-dlp",
+  "install": {
+    "windows": {
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp.exe",
+        "assetArm64": "yt-dlp_arm64.exe",
+        "checksums": "SHA2-256SUMS"
+      }
+    },
+    "linux": {
+      "github": {
+        "repo": "yt-dlp/yt-dlp",
+        "asset": "yt-dlp_linux",
+        "as": "yt-dlp",
+        "checksums": "SHA2-256SUMS"
+      }
+    }
+  },
+  "selfUpdate": "yt-dlp -U",
+  "verify": "yt-dlp --version"
+}
+```
+
+Rules:
+
+- The `github` block **replaces** winget/brew/apt keys for that platform. Keeping both installs two
+  copies and lets PATH order decide which runs, which is exactly the confusion this avoids.
+- Single-file assets only. No archives, no tarballs. Check the real asset names first with
+  `curl -sL https://api.github.com/repos/<owner>/<repo>/releases/latest | jq -r '.assets[].name'`.
+- `as` renames a platform-suffixed asset (`yt-dlp_linux` -> `yt-dlp`). On Windows `.exe` is appended
+  automatically if missing.
+- `selfUpdate` is optional. Without it, `cgrupdate` re-downloads and compares hashes instead.
+- No code changes needed anywhere. `Install-CongruensTool` discovers the block, and all three
+  bootstrap scripts already detect it and delegate.
+
+### Verify
+
+- `cgrupdate -List` shows it.
+- `cgrtool <name> -DryRun` then `cgrtool <name>`.
+- `cgrupdate <name>` exercises the update path.
+
 ## File locations at a glance
 
 | What | Where |
@@ -116,6 +165,8 @@ Windows).
 | Module loader | `powershell/Congruens/Congruens.psm1` |
 | Built-in metadata (cgrman) | `builtins/*.json` |
 | External tool definitions | `tools/*.json` |
+| Self-managed tool install/update | `powershell/Congruens/Public/Install-CongruensTool.ps1` |
+| Self-managed binary location | `~/.congruens/bin` (prepended to PATH by `profile.ps1`) |
 | Bootstrap (Windows) | `bootstrap/windows.ps1` |
 | MOTD / tips | `powershell/Congruens/Public/Show-Motd.ps1` |
 | cgrman implementation | `powershell/Congruens/Public/Show-CongruensManual.ps1` |
