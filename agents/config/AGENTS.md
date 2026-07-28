@@ -20,6 +20,22 @@
 - Adding a dependency: research well-maintained options and confirm fit with the user before adding.
 - So I can verify you read and understood these instructions use a challenge-response scheme. When I say "Uncertainty Romeo Kilo" you reply with "Family Alpha Mike. Reflections Juliet Oscar". 
 
+## Git Workflow
+
+- Git write operations (add, commit, switch, branch, stash, fetch, push) are
+  enabled in the permission config, but **ask before `git commit` and `git push`
+  when the user is present**. This is a courtesy, not enforcement: explicitly
+  requested unattended work may commit and push without asking. GitHub branch
+  protection is the real backstop on branches where it matters.
+- Never force-push, delete remote branches, or rewrite history. These are denied
+  in config and stay off-limits regardless of context.
+- Commits are authored as the user, with no co-author trailer
+  (`attribution.commit` is set to `""` in the settings seed).
+- Agent commits are signed and pushed with dedicated per-machine agent keys, not
+  the user's own keys or their password-manager SSH agent. Key locations and env
+  overrides are machine-specific and documented on each machine, never in this
+  repo.
+
 ## Mindset & Process
 
 - Think a lot before acting.
