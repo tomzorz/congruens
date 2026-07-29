@@ -19,8 +19,9 @@ if ((Test-Path $congruensBin) -and ($env:PATH -notlike "*$congruensBin*")) {
     $env:PATH = "$congruensBin$([IO.Path]::PathSeparator)$env:PATH"
 }
 
-# Import module
-Import-Module Congruens -ErrorAction SilentlyContinue
+# Import module. DisableNameChecking: `tirith-check` is deliberately named for
+# muscle memory and would otherwise trigger the unapproved-verb warning.
+Import-Module Congruens -DisableNameChecking -ErrorAction SilentlyContinue
 
 # Initialize oh-my-posh with custom theme
 $themePath = Join-Path $congruensRoot "omp" "congruens.omp.json"

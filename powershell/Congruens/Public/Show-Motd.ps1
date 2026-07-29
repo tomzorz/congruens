@@ -45,7 +45,17 @@ function Show-Motd {
     if (-not $SkipFastfetch) {
         $fastfetchCmd = Get-Command fastfetch -ErrorAction SilentlyContinue
         if ($fastfetchCmd) {
-            $proc = Start-Process -FilePath $fastfetchCmd.Source -NoNewWindow -PassThru
+            # Use the trimmed congruens config (essentials only) when present;
+            # plain `fastfetch` still gives the full output on demand.
+            $congruensRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
+            $ffConfig = Join-Path (Join-Path $congruensRoot 'config') 'fastfetch.jsonc'
+            $ffArgs = if (Test-Path $ffConfig) { @('--config', $ffConfig) } else { @() }
+
+            $proc = if ($ffArgs.Count -gt 0) {
+                Start-Process -FilePath $fastfetchCmd.Source -ArgumentList $ffArgs -NoNewWindow -PassThru
+            } else {
+                Start-Process -FilePath $fastfetchCmd.Source -NoNewWindow -PassThru
+            }
             if (-not $proc.WaitForExit(1000)) {
                 $proc.Kill()
                 Write-Host "   fastfetch timed out" -ForegroundColor DarkGray
@@ -68,7 +78,14 @@ function Show-Motd {
         "Use 'll' for enhanced directory listing with eza.",
         "Use 'setjump <alias>' to bookmark the current directory.",
         "Use 'jump <alias>' to jump to a bookmarked directory.",
-        "Use 'jump' with no args to list all your bookmarks."
+        "Use 'jump' with no args to list all your bookmarks.",
+        "Use 'cgrman' to browse all Congruens commands, tools, and dev environments.",
+        "Use 'cgrinstall -List' to see available dev environments and their status.",
+        "Use 'cgrinstall <name>' to install a dev environment (dotnet, node, python).",
+        "Use 'cgrtool <name>' to install a self-managed tool from its GitHub release.",
+        "Use 'cgrupdate' to update self-managed tools like yt-dlp to the latest release.",
+        "Use 'tirith-check check -- <cmd>' to analyze a command before running it.",
+        "Use 'tirith-check run <url>' as a safe replacement for curl | bash."
     )
     
     $tipIndex = Get-Random -Maximum $tips.Count
