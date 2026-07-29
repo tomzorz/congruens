@@ -4,6 +4,8 @@
 | Date | Source | What Went Wrong | What To Do Instead |
 |------|--------|----------------|-------------------|
 | 2026-03-01 | self | Used `2>nul` in bash on Windows, which created a literal file named `nul` (reserved device name, undeletable via normal tools) | Null device depends on shell context: git-bash uses `2>/dev/null` (MSYS2 emulates it), CMD/batch uses `>NUL`, PowerShell uses `>$null`. Never use `2>nul` in git-bash, it creates a literal file. To delete a `nul` file if it happens again: Python `ctypes.windll.kernel32.DeleteFileW("\\\\?\\path\\nul")` |
+| 2026-07-29 | user | Chained many commands into one bash call (`cd X && git status && git branch && git log ...`). Compound commands don't match per-command permission allowlist patterns, so they trigger security prompts that individual commands would sail through | One small command per tool call; run independent ones as parallel calls. Chain only when steps need one shell invocation (cd dependency, env var, pipe). Now a rule in AGENTS.md Tooling & Workflow |
+| 2026-07-29 | user | Volunteered time-effort estimates ("takes a week by hand" style). They assume hand-written dev pace and are almost always nonsense in agentic workflows | Never estimate time effort unless explicitly asked. Describe scope concretely instead (files, steps, risk). Now a rule in AGENTS.md Communication Preferences |
 
 ## User Preferences
 - Use `Register-ArgumentCompleter` for dynamic tab completion, not just `ValidateSet`

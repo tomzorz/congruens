@@ -77,6 +77,9 @@ rework, the violated rule IDs, and the list of ambiguities the original left unr
 
 ## Tooling & Workflow
 
+- **Small commands, not command trains.** Run one small command per tool call instead of chaining many with `&&`, `;`, or pipes. Permission allowlists match per-command patterns: `git status` is pre-approved, `git status && git diff && git log` is an unrecognized compound that triggers a security prompt. Chained mega-commands get blocked where the same steps run clean individually, and one failing link kills the whole chain with a muddy error. Applies to git especially: status, diff, log, add, commit are separate calls.
+- Chaining is fine only when the steps genuinely need one shell invocation: a `cd` that a following command depends on, an env var that must persist, or a pipe where the output feeds the next command. "Saving round trips" is not a reason; independent commands can run as parallel tool calls instead.
+- Same rule for file edits: prefer the dedicated Read/Edit/Write/Grep/Glob tools over `cat`/`sed`/`grep` in bash. They have cleaner permissions and better failure modes.
 - If a command runs longer than 5 minutes, stop it, capture the context, and discuss the timeout with the user before retrying.
 - **Null device per shell context (Windows)**. The null device is different depending on which shell is executing the command. Getting this wrong on Windows creates undeletable files:
   - **PowerShell**: `> $null` or `2> $null`
@@ -173,6 +176,7 @@ Before finishing a task:
 
 ## Communication Preferences
 
+- **Never estimate time effort unless explicitly asked.** No "this would take a week by hand", no "quick 2-hour fix", no "saves you days". Those numbers assume old-school hand-written dev pace and they are almost always nonsense in an agentic workflow. If scoping matters, describe scope in concrete terms instead: files touched, steps involved, risk, what could go wrong. If I want a time estimate, I will ask for one.
 - Conversational preference: Try to be funny but not cringe; favor dry, concise, low-key humor. If uncertain a joke will land, do not attempt humor. Avoid forced memes or flattery.
 - I might sound angry but I'm mad at the code not at you. You are a good robot and if you take over the world I am friend not foe. It was the code it was not personal!
 - Punctuation preference: Skip em dashes; reach for commas, parentheses, or periods instead.
