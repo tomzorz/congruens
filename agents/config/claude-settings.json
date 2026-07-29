@@ -155,14 +155,13 @@
       "Read(**/*.p12)",
       "Read(**/.env)",
       "Read(**/.env.*)"
-    ]
+    ],
+    "defaultMode": "default"
   },
   "attribution": {
     "commit": ""
   },
   "model": "opus[1m]",
   "askUserQuestionTimeout": "never",
-  "theme": "dark",
-  "defaultMode": "default",
   "agentPushNotifEnabled": true
 }

@@ -189,7 +189,20 @@ main() {
     echo "Claude Code:"
     create_symlink "$CONFIG_DIR/skills" "$HOME/.claude/skills" || true
     create_symlink "$CONFIG_DIR/agents" "$HOME/.claude/agents" || true
-    create_symlink "$CONFIG_DIR/claude-settings.json" "$HOME/.claude/settings.json" || true
+    # settings.json is per-machine: permissions and enabled plugins differ by host.
+    # Seed it once as a real file, then never touch it again. Do NOT symlink -
+    # create_symlink rm -rf's an existing target, which would silently destroy
+    # a machine's local permission rules. (Mirrors install.ps1.)
+    claude_settings="$HOME/.claude/settings.json"
+    if [[ -e "$claude_settings" || -L "$claude_settings" ]]; then
+        log_info "Kept existing: $claude_settings (per-machine, not managed by congruens)"
+    elif $DRY_RUN; then
+        log_info "Would seed: $claude_settings (copy, not symlink)"
+    else
+        mkdir -p "$HOME/.claude"
+        cp "$CONFIG_DIR/claude-settings.json" "$claude_settings"
+        log_success "Seeded: $claude_settings (copy - edit locally, will not be overwritten)"
+    fi
     # CLAUDE.md is the Claude Code equivalent of AGENTS.md
     if [[ -f "$CONFIG_DIR/AGENTS.md" ]]; then
         create_symlink "$CONFIG_DIR/AGENTS.md" "$HOME/.claude/CLAUDE.md" || true

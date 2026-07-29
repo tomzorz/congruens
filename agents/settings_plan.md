@@ -42,17 +42,36 @@ it stays consistent with the others.
 - Disk-level: `> /dev/sda*`, `mkfs *`, `dd if=*`
 - Fork bomb: `:(){:|:&};:`
 
+**Git posture: middle ground.** Normal forward-moving git work is allowed in config, but agents
+ask before `git commit` and `git push` when the user is present (a courtesy defined in AGENTS.md,
+not enforced by config). History rewriting and anything that destroys work stays denied. GitHub
+branch protection is the real backstop on branches where it matters.
+
+**Allow (forward-moving git):**
+
+- Staging and committing: `git add`, `git commit`
+- Branching: `git switch`
+- Remote reads: `git fetch`
+- Stash forward ops: `git stash` (bare), `git stash push/pop/apply/show`
+- Unstaging: `git restore --staged`
+- Publishing: `git push` (plain; force/delete/mirror variants stay denied)
+
+**Ask (not listed either way, falls back to the default stance):**
+
+- `git merge`, `git rebase --continue` style flows, `git reset` (non-hard), `git revert`,
+  `git cherry-pick`, `git pull`, `git clone`, `git rm`, `git mv`, `git restore` (working tree)
+
 **Always deny (git destructive):**
 
-- Commits and staging: `git commit`, `git add`
-- Branch operations: `git checkout`, `git switch`, `git branch -d/-D/--delete`, `git merge`, `git rebase`
-- History rewriting: `git reset`, `git revert`, `git cherry-pick`
-- Stash mutations: `git stash` (bare), `git stash drop/pop/clear/push/save`
-- Cleanup: `git clean`, `git restore`
-- Remote operations: `git push`, `git pull`, `git fetch`, `git clone`
-- Repository setup: `git init`, `git rm`, `git mv`
+- Legacy branch/checkout: `git checkout` (use switch/restore), `git branch -d/-D/--delete`
+- History rewriting: `git rebase`, `git reset --hard`, `git filter-branch`, `git update-ref`,
+  `git replace`
+- Work destruction: `git stash drop/clear`, `git clean`
+- Dangerous pushes: `git push --force*/-f`, `git push --delete`, `git push * :*`, `git push --mirror`
+- Repository setup: `git init`
 - Tag mutations: `git tag -d/--delete/-a/-s`
-- Advanced: `git worktree`, `git submodule`, `git bisect`, `git reflog expire`, `git gc`, `git prune`, `git filter-branch`, `git update-ref`, `git replace`, `git notes`
+- Advanced: `git worktree`, `git submodule`, `git bisect`, `git reflog expire`, `git gc`,
+  `git prune`, `git notes`
 - Config mutations: `git config --global/--system/--unset`, `git config user.*`
 - Remote mutations: `git remote add/remove/rename/set-url`
 
