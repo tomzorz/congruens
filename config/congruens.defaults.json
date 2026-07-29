@@ -3,17 +3,8 @@
   "description": "Congruens default configuration",
   "version": "1.0.0",
   "settings": {
-    "preferredPackageManager": {
-      "windows": "winget",
-      "macos": "brew",
-      "linux": "apt"
-    },
     "theme": {
       "ohMyPosh": "congruens.omp.json"
-    },
-    "tools": {
-      "autoUpdate": false,
-      "installMissing": false
     }
   },
   "projectRoots": [
