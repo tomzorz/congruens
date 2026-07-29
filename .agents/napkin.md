@@ -40,11 +40,11 @@
 
 ## Domain Notes (Tool Updates)
 - **Bootstrap is install-only by design.** All three scripts run the first word of `verify` through a command lookup and `continue` if it resolves. Re-running bootstrap never upgrades anything. This is intentional, not a bug -- don't "fix" it by removing the skip.
-- `config/congruens.defaults.json` has `settings.tools.autoUpdate` and `installMissing` keys that NOTHING reads. Dead config, present since early on. Same for `preferredPackageManager`.
+- ~~`config/congruens.defaults.json` has dead keys~~ **CLEANED 2026-07-29**: `tools.autoUpdate`, `installMissing`, and `preferredPackageManager` removed (nothing ever read them). Note the bootstraps still only COPY defaults to local; nothing reads the content of either file yet (`theme.ohMyPosh` and `projectRoots` are aspirational too, kept for now).
 - `yt-dlp -U` refuses to run when it detects a package-manager install (winget/brew/pip) and tells you to use that manager instead. So the winget copy doesn't just lag behind daily releases, it disables the self-updater. This is why the `github` install method exists.
 - **`github` install method** (added 2026-07-27): tools/*.json can declare `install.<platform>.github` = `{repo, asset, assetArm64?, as?, checksums?}` plus a top-level `selfUpdate`. Binary goes to `~/.congruens/bin`, which `profile.ps1` PREPENDS to PATH so it beats a package-manager copy. Implemented once in `powershell/Congruens/Public/Install-CongruensTool.ps1`; the three bootstrap scripts detect the key, skip the tool in their own loop, and shell out to `pwsh -NoProfile` to call `Install-CongruensTool -All`. Do not reimplement download logic in bash.
 - Scope is single-file assets only. No archive extraction, no arch-triple matching beyond an optional `assetArm64`. Deliberate: daily-release tools ship plain binaries.
-- Known gap: `tools/tirith.json` declares `"cargo"` on all platforms but no bootstrap reads a `cargo` key. macOS bootstrap reads ONLY `.install.macos.brew`; Linux reads only apt/dnf/pacman/brew; Windows reads winget/scoop/choco. Any other key is silently ignored and the tool prints SKIP.
+- ~~Known gap: `tools/tirith.json` declares `"cargo"` but no bootstrap reads a `cargo` key.~~ **FIXED 2026-07-27**: all three bootstraps now try `cargo install` as a last-resort fallback when the native package managers have no package and cargo is on PATH.
 
 ## Patterns That Work (GitHub Release Downloads)
 - Use `https://github.com/<owner>/<repo>/releases/latest/download/<asset>` -- a plain redirect, no API call, so the unauthenticated 60-req/hr GitHub API limit never applies. Only hit `api.github.com` if you genuinely need release metadata.
@@ -58,6 +58,8 @@
 - Lojbanlite and the Humanizer skill are mutually exclusive: Lojbanlite for specs, Humanizer for narrative prose. Never both on one text.
 
 ## Domain Notes
+- `tirith-check` is the only export with an unapproved PowerShell verb. Suppressed via `Import-Module -DisableNameChecking` in profile.ps1 (deliberate: muscle-memory name beats verb compliance). Don't rename it, and don't remove the flag.
+- Show-Motd runs fastfetch with `config/fastfetch.jsonc` (small logo, 11 essential modules) when the file exists, falls back to plain fastfetch otherwise. Plain `fastfetch` on the CLI still gives full output.
 - Agent skills live in `agents/config/skills/<name>/SKILL.md` (frontmatter: name, description, author: congruens, version, date). NOT in `.github/skills` or user dir directly.
 - `agents/install.ps1` symlinks `agents/config/skills` → `~/.agents/skills` and `~/.claude/skills`.
 - Congruens is a cross-platform CLI experience module (PowerShell 7+)
