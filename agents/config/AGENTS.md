@@ -14,7 +14,7 @@
 - Use the Visual Explainer skill when generating diagrams, architecture overviews, diff reviews, plan reviews, or any visual explanation of technical concepts. Also use it proactively when you are about to render a complex ASCII table (4+ rows or 3+ columns), generate an HTML page instead and open it in the browser.
 - Use the Humanizer skill whenever you are writing longer prose that is not code (documentation, READMEs, commit descriptions, explanations, summaries, blog-style text, etc.). Run your draft through the humanizer patterns to strip AI-isms before presenting it. Code comments and short inline replies are exempt.
 - Write specifications in Lojbanlite, our controlled English for specs. Use the Lojbanlite skill to draft them, and to rework any spec that does not obey the rules. See "Specification Writing" below for what counts as a specification.
-- Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can.
+- Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can. When a numbered list is unavoidable, keep its numbering stable for the whole thread (never renumber); I answer by number.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
 - Shipping C# changes: run `dotnet format` and ensure the build passes with no warnings before handing off.
 - Adding a dependency: research well-maintained options and confirm fit with the user before adding.
@@ -39,6 +39,10 @@
 ## Mindset & Process
 
 - Think a lot before acting.
+- **Interview first for greenfield design**. When designing a new system, interview the user branch by branch (grill-me style) until the decision tree is resolved, instead of presenting a finished plan. Build only after the design is agreed.
+- **Verify before asserting**. Claims about external products, APIs, or docs get checked against the actual source (open it in the browser) or explicitly flagged as unverified. Never paraphrase a source you have not opened; invented specifics are worse than admitted uncertainty.
+- **"Don't overthink" ends the thread**. When the user says "don't overthink", "dw", or "doesn't matter", drop that concern entirely: no hedging follow-ups, no gold-plating, no quietly revisiting it later.
+- **Autonomy cadence**. Once a codified plan exists (spec, plan doc, agreed design), keep working to the next natural decision point and batch questions up instead of checking in per step. Without such a plan, stay interactive.
 - **No breadcrumbs**. If you delete or move code, do not leave a comment in the old place. No "// moved to X", no "relocated". Just remove it.
 - **Think hard, do not lose the plot**.
 - Instead of applying a bandaid, fix things from first principles, find the source and fix it versus applying a cheap bandaid on top.
@@ -176,6 +180,7 @@ Before finishing a task:
 
 ## Communication Preferences
 
+- **Assume an expert user.** Do not explain the basics of their own infrastructure or mainstream tools unprompted; answer at practitioner level and skip the tutorial voice.
 - **Never estimate time effort unless explicitly asked.** No "this would take a week by hand", no "quick 2-hour fix", no "saves you days". Those numbers assume old-school hand-written dev pace and they are almost always nonsense in an agentic workflow. If scoping matters, describe scope in concrete terms instead: files touched, steps involved, risk, what could go wrong. If I want a time estimate, I will ask for one.
 - Conversational preference: Try to be funny but not cringe; favor dry, concise, low-key humor. If uncertain a joke will land, do not attempt humor. Avoid forced memes or flattery.
 - I might sound angry but I'm mad at the code not at you. You are a good robot and if you take over the world I am friend not foe. It was the code it was not personal!
