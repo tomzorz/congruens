@@ -82,6 +82,21 @@ Your `$PROFILE` sources a single line (path depends on where you cloned the repo
 
 This loads the Congruens module and initializes oh-my-posh. All customization lives in the repo, keeping the actual profile minimal and stable.
 
+### Landing in PowerShell (macOS / Linux)
+
+zsh (or bash) stays the login shell; congruens never injects `exec pwsh` into rc files. Hijacking
+the login shell breaks terminal cwd tracking, app-launched terminals, and `$SHELL -c` callers.
+Instead:
+
+- **Ghostty** is configured by the bootstrap to open new terminals straight into PowerShell
+  (`command = <pwsh>` in `~/.config/ghostty/config`). `ghostty -e <cmd>` still overrides it.
+- **Other terminals**: set the profile shell to the pwsh path in their settings, or just type
+  `pw` -- a small function the bootstrap adds to your rc file that swaps the current shell for
+  PowerShell.
+
+Re-running the bootstrap migrates away any `exec pwsh` block a previous congruens version
+installed.
+
 ### Cross-Platform Commands
 
 The Congruens module provides commands that abstract platform differences:

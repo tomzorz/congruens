@@ -121,6 +121,18 @@ fi
 detect_distro
 print_success "Running on $DISTRO_NAME"
 
+# NixOS: packages are declared in the system flake, never installed
+# imperatively — apt/dnf/pacman don't exist, Homebrew doesn't work, and
+# downloaded binaries can't exec (no FHS loader). Tools and PowerShell
+# come from the machine's NixOS configuration; only the profile/omp/config
+# wiring steps below apply.
+IS_NIXOS=false
+if [[ "$DISTRO_ID" == "nixos" ]]; then
+    IS_NIXOS=true
+    SKIP_TOOLS=true
+    print_warning "NixOS detected: skipping Homebrew and tool installation (declare them in the system flake)"
+fi
+
 # Detect package manager
 detect_package_manager
 if [[ -n "$PKG_MANAGER" ]]; then
@@ -148,7 +160,10 @@ print_success "curl is available"
 
 print_step "Checking Homebrew (Linuxbrew)..."
 
-if command -v brew &> /dev/null; then
+if [[ "$IS_NIXOS" == true ]]; then
+    print_info "NixOS: Homebrew skipped"
+    HAS_BREW=false
+elif command -v brew &> /dev/null; then
     print_success "Homebrew is already installed"
     HAS_BREW=true
 else
@@ -197,6 +212,9 @@ else
     print_info "Installing PowerShell..."
     
     case "$DISTRO_ID" in
+        nixos)
+            print_failure "PowerShell not found. On NixOS add pkgs.powershell to the system configuration and rebuild."
+            ;;
         ubuntu|debian)
             # Install prerequisites
             $PKG_UPDATE
@@ -451,74 +469,41 @@ if [[ "$SKIP_PROFILE" == false ]]; then
 fi
 
 # ============================================================================
-# Shell Auto-Launch Configuration
+# Shell Integration Configuration
 # ============================================================================
 
-print_step "Configuring shell auto-launch..."
+print_step "Configuring shell integration..."
 
-# Add PowerShell auto-launch to shell rc files
-# This makes pwsh start automatically when opening a terminal
+# PowerShell auto-launch lives in the TERMINAL EMULATOR config, not the shell
+# rc files. Earlier congruens versions injected `exec pwsh` into ~/.bashrc /
+# ~/.zshrc, which silently broke everything that expects the login shell to be
+# a POSIX shell: terminal cwd tracking (shell integration, OSC 7), apps that
+# launch terminals with a command to run, `$SHELL -c` callers, and every
+# terminal not covered by the IDE guard list. The rc files now only get a
+# small `pw` function to hop into PowerShell on demand; terminals we know how
+# to configure (Ghostty) are pointed at pwsh directly, which keeps the
+# launch-into-PowerShell experience without hijacking bash/zsh.
 
-# Auto-launch blocks defer `exec pwsh` via the shell's pre-prompt hook.
-# Third-party installers (Bun, Homebrew on Linux, nvm, asdf, ...) append
-# their own `export PATH=...` lines to ~/.zshrc or ~/.bashrc AFTER our
-# block. If we ran `exec pwsh` inline those exports would never evaluate
-# and PowerShell would inherit an incomplete PATH. The hook runs once,
-# just before the first interactive prompt, after the whole rc file is
-# evaluated. Keep the marker string unchanged: other installers grep for it.
+read -r -d '' PW_OPTIN_BLOCK <<'PWBLOCK' || true
 
-read -r -d '' PWSH_LAUNCH_ZSH_BLOCK <<'ZSHBLOCK' || true
+# Congruens: pwsh opt-in
+# Type `pw` to switch this shell to PowerShell. Automatic launch lives in the
+# terminal emulator config (Ghostty `command`), not here - hijacking the rc
+# breaks cwd tracking, app-launched terminals, and $SHELL -c callers.
+pw() { exec pwsh "$@"; }
+PWBLOCK
 
-# Congruens: Auto-launch PowerShell
-# Deferred via precmd hook so third-party exports appended later in this rc
-# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
-_congruens_launch_pwsh() {
-    add-zsh-hook -d precmd _congruens_launch_pwsh 2>/dev/null
-    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
-        && [[ "$TERM_PROGRAM" != "vscode" ]] \
-        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
-        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-        exec pwsh
-    fi
-}
-autoload -Uz add-zsh-hook
-add-zsh-hook precmd _congruens_launch_pwsh
-ZSHBLOCK
-
-read -r -d '' PWSH_LAUNCH_BASH_BLOCK <<'BASHBLOCK' || true
-
-# Congruens: Auto-launch PowerShell
-# Deferred via PROMPT_COMMAND so third-party exports appended later in this rc
-# (Bun, Homebrew, nvm, etc.) are processed before `exec pwsh` runs.
-_congruens_launch_pwsh() {
-    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh;/}"
-    PROMPT_COMMAND="${PROMPT_COMMAND//_congruens_launch_pwsh/}"
-    if [[ $- == *i* ]] && command -v pwsh > /dev/null 2>&1 \
-        && [[ "$TERM_PROGRAM" != "vscode" ]] \
-        && [[ "$TERMINAL_EMULATOR" != "JetBrains-JediTerm" ]] \
-        && [[ -z "$INTELLIJ_ENVIRONMENT_READER" ]]; then
-        exec pwsh
-    fi
-}
-PROMPT_COMMAND="_congruens_launch_pwsh;${PROMPT_COMMAND:-}"
-BASHBLOCK
-
-# Old block (pre-hook) had a bare `exec pwsh` inside the guard. The new one
-# defines `_congruens_launch_pwsh`. Detect and migrate.
-_has_old_autolaunch() {
-    local rc_file="$1"
-    [[ -f "$rc_file" ]] || return 1
-    grep -q "Congruens: Auto-launch PowerShell" "$rc_file" || return 1
-    ! grep -q "_congruens_launch_pwsh" "$rc_file"
-}
-
-_strip_old_autolaunch() {
+# Strip any previous congruens auto-launch block, whatever its vintage:
+# the original bare `exec pwsh` guard (ends with `fi`), the hooked zsh shape
+# (ends with the add-zsh-hook line), or the hooked bash shape (ends with the
+# PROMPT_COMMAND line).
+_strip_autolaunch() {
     local rc_file="$1"
     local tmp
     tmp="$(mktemp)"
     awk '
         /# Congruens: Auto-launch PowerShell/ { skipping = 1; next }
-        skipping && /^fi$/ { skipping = 0; next }
+        skipping && (/^fi$/ || /^add-zsh-hook precmd _congruens_launch_pwsh$/ || /^PROMPT_COMMAND="_congruens_launch_pwsh/) { skipping = 0; next }
         !skipping { print }
     ' "$rc_file" > "$tmp" && mv "$tmp" "$rc_file"
 }
@@ -526,29 +511,64 @@ _strip_old_autolaunch() {
 configure_shell_rc() {
     local rc_file="$1"
     local shell_name="$2"
-    local block="$3"
 
-    if _has_old_autolaunch "$rc_file"; then
-        _strip_old_autolaunch "$rc_file"
-        print_info "Migrated old auto-launch block in $rc_file"
+    if [[ -f "$rc_file" ]] && grep -q "Congruens: Auto-launch PowerShell" "$rc_file"; then
+        _strip_autolaunch "$rc_file"
+        print_info "Removed auto-launch block from $rc_file (launch moved to terminal config)"
     fi
 
-    if [[ -f "$rc_file" ]] && grep -q "_congruens_launch_pwsh" "$rc_file"; then
-        print_success "$shell_name already configured ($rc_file)"
+    if [[ -f "$rc_file" ]] && grep -q "Congruens: pwsh opt-in" "$rc_file"; then
+        print_success "$shell_name pw opt-in already present ($rc_file)"
         return
     fi
 
-    printf '%s\n' "$block" >> "$rc_file"
-    print_success "Configured $shell_name to auto-launch PowerShell ($rc_file)"
+    printf '%s
+' "$PW_OPTIN_BLOCK" >> "$rc_file"
+    print_success "Added pw opt-in function for $shell_name ($rc_file)"
 }
 
 # Configure for bash (most common default on Linux)
-configure_shell_rc "$HOME/.bashrc" "bash" "$PWSH_LAUNCH_BASH_BLOCK"
+configure_shell_rc "$HOME/.bashrc" "bash"
 
 # Configure for zsh (if installed)
 if command -v zsh &> /dev/null; then
-    configure_shell_rc "$HOME/.zshrc" "zsh" "$PWSH_LAUNCH_ZSH_BLOCK"
+    configure_shell_rc "$HOME/.zshrc" "zsh"
 fi
+
+# Ghostty: launch pwsh directly in new terminal windows. `ghostty -e <cmd>`
+# still overrides this, so app-launched terminals with explicit commands keep
+# working, and bash/zsh stays the login shell for everything else.
+configure_ghostty() {
+    local cfg_dir="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
+    local cfg="$cfg_dir/config"
+    local pwsh_path
+    pwsh_path="$(command -v pwsh || true)"
+    [[ -n "$pwsh_path" ]] || return 0
+
+    if ! command -v ghostty &> /dev/null; then
+        return 0
+    fi
+
+    if grep -q "Congruens: launch PowerShell" "$cfg" 2>/dev/null; then
+        print_success "Ghostty already configured to launch PowerShell"
+        return 0
+    fi
+    if grep -Eq '^[[:space:]]*command[[:space:]]*=' "$cfg" 2>/dev/null; then
+        print_warning "Ghostty config already sets 'command' - leaving it alone. Point it at $pwsh_path to launch PowerShell."
+        return 0
+    fi
+
+    mkdir -p "$cfg_dir"
+    cat >> "$cfg" <<GHOSTTY
+
+# Congruens: launch PowerShell in new terminals (delete these lines for bash/zsh)
+command = $pwsh_path
+GHOSTTY
+    print_success "Configured Ghostty to launch PowerShell (command = $pwsh_path)"
+    print_info "Reload Ghostty config (Ctrl+Shift+,) or restart Ghostty to apply"
+}
+
+configure_ghostty
 
 # ============================================================================
 # oh-my-posh Configuration
