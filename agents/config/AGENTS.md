@@ -75,6 +75,8 @@ of an ADR.
 **It does not apply to**: code, comments, commit messages, PR descriptions, READMEs, tutorials,
 chat, quoted text, or error output.
 
+**Decisions live in the spec.** Record each design decision inside the spec document and section it affects, updating the spec text in place. Never create a standalone decisions file or a catch-all 'Decisions' section.
+
 **Never run Lojbanlite and the Humanizer on the same text.** Specs get Lojbanlite, narrative prose
 gets the Humanizer. They pull in opposite directions by design.
 
