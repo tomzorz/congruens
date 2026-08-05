@@ -9,8 +9,8 @@ description: |
   descriptive filename so agents can find relevant notes by scanning titles
   without reading every file.
 author: congruens
-version: 2.0.0
-date: 2026-02-20
+version: 2.1.0
+date: 2026-08-05
 ---
 
 # Sticky Notes
@@ -41,6 +41,10 @@ Use sticky notes whenever:
   an upgrade, and the user confirms it should be tracked.
 
 Do not use sticky notes for mistakes or corrections (use the Napkin for those).
+Do not use them for summaries of completed work either: git history already
+records what happened, and a note nobody will read back is noise. The test
+before writing one: **is there a concrete future task that will consume this?**
+If you cannot name it, skip the note.
 
 ## Folder Structure
 

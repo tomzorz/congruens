@@ -1,26 +1,41 @@
 ---
 name: assumption-log
 description: |
-  Explicitly log every assumption made while working on a task. Surfaces
-  hidden assumptions that cause bugs when they turn out to be wrong. Each
-  task gets its own log file in `.agents/assumptions/` with a descriptive
-  filename. Assumptions are validated, corrected, or confirmed as work
-  progresses, creating an auditable trail of reasoning.
+  Log load-bearing assumptions made while working on a task: those that
+  would force rework if wrong AND cannot be verified quickly. If an
+  assumption can be checked in under a minute, check it instead of logging
+  it. Surfaces the hidden assumptions that cause bugs when they turn out to
+  be wrong. Each task that needs one gets its own log file in
+  `.agents/assumptions/` with a descriptive filename. Assumptions are
+  validated, corrected, or confirmed as work progresses.
 author: congruens
-version: 1.0.0
-date: 2026-02-20
+version: 2.0.0
+date: 2026-08-05
 ---
 
 # Assumption Log
 
-You explicitly record every assumption you make while working on a task.
-Most agent-caused bugs come from assumptions that seemed reasonable but were
-wrong. By writing them down, you force yourself to notice them, and you give
-the user (and future sessions) a way to spot where things went sideways.
+You record the assumptions that could sink the task. Most agent-caused bugs
+come from assumptions that seemed reasonable but were wrong. By writing the
+dangerous ones down, you force yourself to notice them, and you give the user
+(and future sessions) a way to spot where things went sideways.
+
+## The bar
+
+An assumption earns a log entry only when BOTH hold:
+
+1. **Load-bearing**: if it turns out wrong, the work built on it needs
+   rework, not a shrug.
+2. **Not quickly verifiable**: you cannot settle it in under a minute with a
+   file read, a command, or a search. If you can, verify it now and log
+   nothing. Verification beats bookkeeping every time.
+
+Not every task needs a log file. A task where every assumption was cheap to
+verify produces no file, and that is the system working, not a gap.
 
 ## When to Use This Skill
 
-Log an assumption whenever you:
+Candidate assumptions (still subject to the bar above) appear whenever you:
 
 - **Infer behavior you haven't verified**. "This endpoint returns JSON."
   "This method is idempotent." "The user wants this in the existing service."
@@ -36,7 +51,8 @@ Log an assumption whenever you:
   tests."
 
 If you catch yourself thinking "this should be fine" or "I think this is how
-it works", that is an assumption. Log it.
+it works", that is an assumption. First try to kill it: a quick read or
+command that settles it beats a log entry. Log only what survives.
 
 ## Folder Structure
 
