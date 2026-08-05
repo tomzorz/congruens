@@ -161,7 +161,6 @@
   "attribution": {
     "commit": ""
   },
-  "model": "opus[1m]",
   "askUserQuestionTimeout": "never",
   "agentPushNotifEnabled": true
 }

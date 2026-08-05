@@ -705,6 +705,66 @@ else
 fi
 
 # ============================================================================
+# Claude Code Notifications (peon-ping)
+# ============================================================================
+
+print_step "Setting up peon-ping (Claude Code notifications)..."
+
+# peon-ping (https://github.com/PeonPing/peon-ping) plays Warcraft peon voice
+# lines on Claude Code lifecycle events. Its installer registers hooks in
+# ~/.claude/settings.json, so it must only run AFTER agents/install.sh has
+# seeded that file - a hook-only settings.json created first would make the
+# seed step skip, and the machine would silently miss the shared config.
+
+PEON_HOOKS_DIR="$HOME/.claude/hooks/peon-ping"
+PEON_CONFIG_SEED="$REPO_ROOT/agents/config/peon-ping.json"
+
+if [[ -d "$PEON_HOOKS_DIR" ]]; then
+    print_success "peon-ping already installed (re-run its installer to update)"
+elif [[ ! -f "$HOME/.claude/settings.json" ]]; then
+    print_warning "~/.claude/settings.json not seeded yet - run agents/install.sh first, then re-run this bootstrap to get peon-ping"
+else
+    PEON_INSTALLED=false
+    if command -v brew &> /dev/null; then
+        if brew install PeonPing/tap/peon-ping --quiet 2>/dev/null && peon-ping-setup; then
+            PEON_INSTALLED=true
+        fi
+    fi
+    # No Linuxbrew on this machine: fall back to the upstream install script,
+    # which registers the hooks itself.
+    if [[ "$PEON_INSTALLED" == false ]]; then
+        if curl -fsSL https://raw.githubusercontent.com/PeonPing/peon-ping/main/install.sh | bash; then
+            PEON_INSTALLED=true
+        fi
+    fi
+    if [[ "$PEON_INSTALLED" == true ]]; then
+        print_success "peon-ping installed and hooks registered"
+        # Seed the shared config over the installer's default on fresh
+        # installs only, so per-machine tweaks survive later bootstrap runs.
+        # The seed's "packs" field is congruens's own (peon-ping ignores it):
+        # the shared roster of sound packs to pull onto every machine.
+        if [[ -f "$PEON_CONFIG_SEED" ]]; then
+            cp -f "$PEON_CONFIG_SEED" "$PEON_HOOKS_DIR/config.json"
+            print_success "Seeded shared peon-ping config"
+            PEON_PACKS=$(jq -r '(.packs // []) | join(",")' "$PEON_CONFIG_SEED" 2>/dev/null \
+                || python3 -c "import json; print(','.join(json.load(open('$PEON_CONFIG_SEED')).get('packs', [])))" 2>/dev/null \
+                || echo "")
+            if [[ -n "$PEON_PACKS" ]]; then
+                if command -v peon &> /dev/null; then
+                    peon packs install "$PEON_PACKS" || print_warning "Some peon-ping packs failed to install"
+                elif [[ -f "$PEON_HOOKS_DIR/peon.sh" ]]; then
+                    bash "$PEON_HOOKS_DIR/peon.sh" packs install "$PEON_PACKS" || print_warning "Some peon-ping packs failed to install"
+                else
+                    print_warning "peon CLI not found - install packs later with: peon packs install $PEON_PACKS"
+                fi
+            fi
+        fi
+    else
+        print_warning "peon-ping install failed - see https://github.com/PeonPing/peon-ping"
+    fi
+fi
+
+# ============================================================================
 # Summary
 # ============================================================================
 

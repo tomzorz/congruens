@@ -381,6 +381,63 @@ if (Test-Path $localPath) {
 }
 
 # ============================================================================
+# Claude Code Notifications (peon-ping)
+# ============================================================================
+
+Write-Step "Setting up peon-ping (Claude Code notifications)..."
+
+# peon-ping (https://github.com/PeonPing/peon-ping) plays Warcraft peon voice
+# lines on Claude Code lifecycle events. Its installer registers hooks in
+# ~/.claude/settings.json, so it must only run AFTER agents/install.ps1 has
+# seeded that file - a hook-only settings.json created first would make the
+# seed step skip, and the machine would silently miss the shared config.
+
+$peonHooksDir = Join-Path $env:USERPROFILE ".claude\hooks\peon-ping"
+$peonConfigSeed = Join-Path $repoRoot "agents\config\peon-ping.json"
+$claudeSettings = Join-Path $env:USERPROFILE ".claude\settings.json"
+
+if (Test-Path $peonHooksDir) {
+    Write-Success "peon-ping already installed (re-run its installer to update)"
+} elseif (-not (Test-Path $claudeSettings)) {
+    Write-Warning "~/.claude/settings.json not seeded yet - run agents/install.ps1 first, then re-run this bootstrap to get peon-ping"
+} else {
+    # install.ps1 dot-sources scripts/ from its repo, so a single-file
+    # download does not run (verified 2026-08-05). Fetch the whole repo zip.
+    $peonZip = Join-Path $env:TEMP "peon-ping-main.zip"
+    $peonSrc = Join-Path $env:TEMP "peon-ping-main"
+    try {
+        Invoke-WebRequest -Uri "https://github.com/PeonPing/peon-ping/archive/refs/heads/main.zip" -OutFile $peonZip -UseBasicParsing
+        Expand-Archive -Path $peonZip -DestinationPath $env:TEMP -Force
+        & powershell -ExecutionPolicy Bypass -File (Join-Path $peonSrc "install.ps1") -Global
+        if ((Test-Path $peonHooksDir) -and $LASTEXITCODE -eq 0) {
+            Write-Success "peon-ping installed and hooks registered"
+            # Seed the shared config over the installer's default on fresh
+            # installs only, so per-machine tweaks survive later bootstrap runs.
+            # The seed's "packs" field is congruens's own (peon-ping ignores
+            # it): the shared roster of sound packs to pull onto every machine.
+            if (Test-Path $peonConfigSeed) {
+                Copy-Item -Path $peonConfigSeed -Destination (Join-Path $peonHooksDir "config.json") -Force
+                Write-Success "Seeded shared peon-ping config"
+                $peonPacks = @((Get-Content $peonConfigSeed -Raw | ConvertFrom-Json).packs) -join ","
+                if ($peonPacks) {
+                    & powershell -ExecutionPolicy Bypass -File (Join-Path $peonHooksDir "peon.ps1") packs install $peonPacks
+                    if ($LASTEXITCODE -ne 0) { Write-Warning "Some peon-ping packs failed to install" }
+                }
+            }
+        } else {
+            Write-Warning "peon-ping install failed - see https://github.com/PeonPing/peon-ping"
+        }
+    }
+    catch {
+        Write-Warning "peon-ping install failed: $_"
+    }
+    finally {
+        Remove-Item $peonZip -ErrorAction SilentlyContinue
+        Remove-Item $peonSrc -Recurse -ErrorAction SilentlyContinue
+    }
+}
+
+# ============================================================================
 # Summary
 # ============================================================================
 
