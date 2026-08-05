@@ -30,6 +30,7 @@
 - ~~When zsh auto-launches PowerShell via `exec pwsh`, shell-specific PATH entries like `~/.bun/bin` may not survive unless `powershell/profile.ps1` reconstructs them.~~ **CORRECTED 2026-04-20**: `exec pwsh` does inherit exported env. The real issue is ordering: third-party installers (Bun, etc.) append exports to `~/.zshrc` *after* the auto-launch block, so they never run. Fix is generic, not Bun-specific: defer `exec pwsh` via `precmd` (zsh) / `PROMPT_COMMAND` (bash) so the whole rc file is sourced first.
 
 ## Patterns That Don't Work
+- `Start-Process -ArgumentList @('--logo', 'Windows 11_small')` splits the space: ArgumentList is joined with spaces and NOT re-quoted, so the target sees `--logo Windows 11_small` as three args. Embed quotes in the element itself (`'"Windows 11_small"'`) on Windows.
 - `Write-Host "text".PadRight(18)` does NOT call the method. In argument (command) parsing mode PowerShell treats the method call as literal text. Wrap it: `Write-Host ("text".PadRight(18))`. Same trap for any method call on a literal passed as an argument.
 - C-style `\"` escaping inside PowerShell double-quoted strings. The escape char is a backtick; for embedded double quotes use a single-quoted string instead.
 - PowerShell `if` always requires braces: `if ($x) { return }` not `if ($x) return`. The parser rejects braceless bodies, unlike C#/bash.
@@ -60,6 +61,7 @@
 ## Domain Notes
 - `tirith-check` is the only export with an unapproved PowerShell verb. Suppressed via `Import-Module -DisableNameChecking` in profile.ps1 (deliberate: muscle-memory name beats verb compliance). Don't rename it, and don't remove the flag.
 - Show-Motd runs fastfetch with `config/fastfetch.jsonc` (small logo, 11 essential modules) when the file exists, falls back to plain fastfetch otherwise. Plain `fastfetch` on the CLI still gives full output.
+- fastfetch `"type": "small"` only has a Windows 11 small logo; on Windows 10 and older it falls back to the unknown-OS question mark. Show-Motd passes `--logo "Windows 11_small"` explicitly on Windows builds < 22000 (fixed 2026-08-05).
 - Agent skills live in `agents/config/skills/<name>/SKILL.md` (frontmatter: name, description, author: congruens, version, date). NOT in `.github/skills` or user dir directly.
 - `agents/install.ps1` symlinks `agents/config/skills` → `~/.agents/skills` and `~/.claude/skills`.
 - Congruens is a cross-platform CLI experience module (PowerShell 7+)

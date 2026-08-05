@@ -49,7 +49,19 @@ function Show-Motd {
             # plain `fastfetch` still gives the full output on demand.
             $congruensRoot = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSScriptRoot))
             $ffConfig = Join-Path (Join-Path $congruensRoot 'config') 'fastfetch.jsonc'
-            $ffArgs = if (Test-Path $ffConfig) { @('--config', $ffConfig) } else { @() }
+            $ffArgs = @()
+            if (Test-Path $ffConfig) {
+                $ffArgs = @('--config', $ffConfig)
+                # The config asks for the small logo, but fastfetch only ships a
+                # small variant for Windows 11 (build 22000+); older Windows
+                # falls back to the unknown-OS question mark. Point it at the
+                # Windows 11 small logo explicitly there.
+                if ((Test-IsWindows) -and ([System.Environment]::OSVersion.Version.Build -lt 22000)) {
+                    # Embedded quotes: Start-Process joins ArgumentList with
+                    # spaces and would otherwise split the logo name.
+                    $ffArgs += @('--logo', '"Windows 11_small"')
+                }
+            }
 
             $proc = if ($ffArgs.Count -gt 0) {
                 Start-Process -FilePath $fastfetchCmd.Source -ArgumentList $ffArgs -NoNewWindow -PassThru
