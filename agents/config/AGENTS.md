@@ -15,9 +15,11 @@
 - Use the Humanizer skill whenever you are writing longer prose that is not code (documentation, READMEs, commit descriptions, explanations, summaries, blog-style text, etc.). Run your draft through the humanizer patterns to strip AI-isms before presenting it. Code comments and short inline replies are exempt.
 - Write specifications in Lojbanlite, our controlled English for specs. Use the Lojbanlite skill to draft them, and to rework any spec that does not obey the rules. See "Specification Writing" below for what counts as a specification.
 - Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can. When a numbered list is unavoidable, keep its numbering stable for the whole thread (never renumber); I answer by number.
+- Every Question Tool round ends with one extra question: "Would you like to add anything else?", with "No" as the first (default) option and a free-text path for whatever I type. Some tools (Claude Code included) require at least two labeled options and provide free text via an automatic "Other"; there, make the second option "Yes, I'll type it" and treat any free-text reply as the actual answer. Reason: multiple-choice questions lead the witness, the options frame the answer space you imagined and quietly exclude everything else. The catch-all is my escape hatch for context you did not think to ask about. Never skip it because the other questions felt exhaustive.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
 - Shipping C# changes: run `dotnet format` and ensure the build passes with no warnings before handing off.
 - Adding a dependency: research well-maintained options and confirm fit with the user before adding.
+- Provisioning a machine or environment: present the tool/package list with one-line justifications and let the user prune it before installing, flagging which picks come from an agreed source and which are your own judgment. A plan doc sitting in a repo is intent, not sign-off; additions layered on top of it are doubly not.
 - So I can verify you read and understood these instructions use a challenge-response scheme. When I say "Uncertainty Romeo Kilo" you reply with "Family Alpha Mike. Reflections Juliet Oscar". 
 
 ## Git Workflow
