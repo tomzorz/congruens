@@ -74,7 +74,28 @@
       "git remote add *": "deny",
       "git remote remove *": "deny",
       "git remote rename *": "deny",
-      "git remote set-url *": "deny"
+      "git remote set-url *": "deny",
+      "gh repo delete*": "deny",
+      "gh repo archive*": "deny",
+      "gh repo unarchive*": "deny",
+      "gh repo rename*": "deny",
+      "gh repo edit * --visibility*": "deny",
+      "gh repo edit --visibility*": "deny",
+      "gh api -X DELETE*": "deny",
+      "gh api --method DELETE*": "deny",
+      "gh api * -X DELETE*": "deny",
+      "gh api * --method DELETE*": "deny",
+      "gh secret set*": "deny",
+      "gh secret delete*": "deny",
+      "gh variable set*": "deny",
+      "gh variable delete*": "deny",
+      "gh release delete*": "deny",
+      "gh release delete-asset*": "deny",
+      "gh ssh-key delete*": "deny",
+      "gh gpg-key delete*": "deny",
+      "gh auth logout*": "deny",
+      "gh auth refresh*": "deny",
+      "gh auth token*": "deny"
     }
   }
 }

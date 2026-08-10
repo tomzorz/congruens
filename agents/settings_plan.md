@@ -75,6 +75,24 @@ branch protection is the real backstop on branches where it matters.
 - Config mutations: `git config --global/--system/--unset`, `git config user.*`
 - Remote mutations: `git remote add/remove/rename/set-url`
 
+### GitHub CLI (`gh`)
+
+**Scope: destructive repo operations and visibility changes only.** Read, PR and issue work through `gh` is untouched and falls back to the default ask stance.
+
+**Always deny (gh destructive):**
+
+- Repo lifecycle: `gh repo delete`, `gh repo archive`, `gh repo unarchive`, `gh repo rename`
+- Visibility: `gh repo edit * --visibility*` and `gh repo edit --visibility*`. Two patterns because the repo argument is positional and optional, so a bare invocation from inside a checkout is valid and one pattern misses half the cases.
+- REST deletes: `gh api -X DELETE*`, `gh api --method DELETE*`, and both spellings again with a preceding path argument. Without these, denying `gh repo delete` accomplishes nothing, since `gh api -X DELETE repos/OWNER/REPO` does the identical job.
+- CI state: `gh secret set/delete`, `gh variable set/delete`. A silent overwrite of a CI secret is miserable to trace back weeks later.
+- Published artifacts: `gh release delete`, `gh release delete-asset`
+- Keys: `gh ssh-key delete`, `gh gpg-key delete`. Otherwise an agent can lock a machine's own agent keys out of pushing.
+- Credentials: `gh auth logout`, `gh auth refresh`, `gh auth token`. Not destructive to GitHub, but the first two mutate stored credentials and their scopes, and `token` prints a live credential to stdout, straight into the session transcript.
+
+**These are prefix matches, so treat them as a speed bump rather than a boundary.** The same work can still be expressed in a shape no pattern anticipated: a REST endpoint that deletes via POST, a GraphQL mutation through `gh api graphql`, or plain `curl` against `api.github.com` with the token pulled from the keyring. Chasing every spelling is not winnable. The real control is the token: keep `delete_repo` off the OAuth scopes (its absence is why `gh repo delete` currently 403s), drop `admin:org` where it is not needed, and for an actual boundary issue a fine-grained PAT scoped to specific repos and hand it to agent sessions via `GH_TOKEN`.
+
+**Left out on purpose:** `gh pr merge*` and `gh workflow run*` are the next candidates if the goal ever widens from "destructive" to "anything with outward effects".
+
 ### File Access
 
 - **Sensitive patterns** (never auto-read): `.env`, `.env.*`, `*.pem`, `*.key`, `*_rsa`, `id_*`, `*.p12`, `*.pfx`, `credentials*`, `secrets*`, `*password*`, `*token*`
