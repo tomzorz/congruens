@@ -393,11 +393,111 @@ Write-Step "Setting up peon-ping (Claude Code notifications)..."
 # seed step skip, and the machine would silently miss the shared config.
 
 $peonHooksDir = Join-Path $env:USERPROFILE ".claude\hooks\peon-ping"
+$peonConfig = Join-Path $peonHooksDir "config.json"
 $peonConfigSeed = Join-Path $repoRoot "agents\config\peon-ping.json"
 $claudeSettings = Join-Path $env:USERPROFILE ".claude\settings.json"
 
+# Put the shared config and the sound packs it names in place. Runs whether or
+# not this bootstrap did the install, because the two drift apart: an install
+# from before the seed existed, or a config someone deleted, would otherwise
+# never be repaired - the old "hooks dir exists, skip everything" short-circuit
+# meant a machine could have peon-ping and no shared config forever.
+#
+# -Force right after a fresh install, so the shared config beats the default the
+# installer just wrote. Without it per-machine tweaks survive and only a missing
+# config gets restored.
+function Initialize-PeonConfig {
+    param([switch]$Force)
+
+    if (-not (Test-Path $peonConfigSeed)) {
+        Write-Warning "peon-ping config seed not found at $peonConfigSeed"
+        return
+    }
+
+    if ((Test-Path $peonConfig) -and (-not $Force)) {
+        Write-Success "peon-ping config already present"
+    } else {
+        Copy-Item -Path $peonConfigSeed -Destination $peonConfig -Force
+        Write-Success "Seeded shared peon-ping config"
+    }
+
+    # The seed's "packs" field is congruens's own (peon-ping ignores it): the
+    # shared roster of sound packs to pull onto every machine. Each pack is a
+    # directory under packs\, so install only the ones that aren't there yet.
+    $roster = @((Get-Content $peonConfigSeed -Raw | ConvertFrom-Json).packs)
+    $missing = @($roster | Where-Object { $_ -and -not (Test-Path (Join-Path $peonHooksDir "packs\$_")) })
+    if ($missing.Count -eq 0) {
+        Write-Success "peon-ping sound packs already installed"
+        return
+    }
+
+    & powershell -ExecutionPolicy Bypass -File (Join-Path $peonHooksDir "peon.ps1") packs install ($missing -join ",")
+    if ($LASTEXITCODE -ne 0) { Write-Warning "Some peon-ping packs failed to install" }
+}
+
+# --- congruens Windows normalizations (see .agents/napkin.md) ---
+# Idempotent, and runs on every bootstrap rather than only after a fresh
+# install: peon's own updater re-adds the full hook set and the BOM, and the
+# resulting Claude Desktop breakage is bad enough that a bootstrap run should
+# repair it without needing peon to be reinstalled first.
+function Set-PeonWindowsNormalizations {
+    # 1) On Windows, peon renders desktop notifications as PowerShell-branded
+    #    toasts: it has no Windows overlay, the nice center banner (orc icon,
+    #    colour-by-source) is macOS-only. Turn them off for Windows only, so it
+    #    plays sounds without the toast spam. The shared seed keeps
+    #    desktop_notifications=true so Mac/Linux still get peon's native overlay.
+    if (Test-Path $peonConfig) {
+        $peonCfg = Get-Content $peonConfig -Raw | ConvertFrom-Json
+        if ($peonCfg.desktop_notifications) {
+            $peonCfg.desktop_notifications = $false
+            $peonCfg | ConvertTo-Json -Depth 20 | Set-Content -Path $peonConfig -Encoding utf8
+            Write-Success "Windows: disabled peon desktop notifications (sounds only)"
+        }
+    }
+
+    # 2) peon's installer subscribes to ~10 hook events, including PreToolUse
+    #    which fires on EVERY tool call, and rewrites settings.json with a UTF-8
+    #    BOM via Windows PowerShell 5.1 Set-Content. The BOM makes Claude
+    #    Desktop's strict JSON parser reject its own config; PreToolUse floods
+    #    the app with a PowerShell spawn per tool call that can leak and
+    #    destabilise it. Trim to the low-frequency events and rewrite as UTF-8
+    #    without a BOM.
+    $peonDropEvents = @('SubagentStart', 'PreToolUse', 'PostToolUseFailure', 'UserPromptSubmit')
+    if (-not (Test-Path $claudeSettings)) {
+        Write-Warning "~/.claude/settings.json not found - skipping peon hook trim"
+        return
+    }
+    try {
+        $s = Get-Content $claudeSettings -Raw | ConvertFrom-Json
+        if ($s.hooks) {
+            $dropped = @()
+            foreach ($ev in $peonDropEvents) {
+                if ($s.hooks.PSObject.Properties.Name -contains $ev) {
+                    $s.hooks.PSObject.Properties.Remove($ev)
+                    $dropped += $ev
+                }
+            }
+            $settingsJson = $s | ConvertTo-Json -Depth 100
+            [System.IO.File]::WriteAllText($claudeSettings, $settingsJson, [System.Text.UTF8Encoding]::new($false))
+            if ($dropped) {
+                Write-Success "Trimmed peon hooks ($($dropped -join ', ')) and stripped settings.json BOM"
+            } else {
+                Write-Success "peon hooks already trimmed; rewrote settings.json without BOM"
+            }
+        }
+    } catch {
+        Write-Warning "Could not normalize peon hooks in settings.json: $_"
+    }
+}
+
+$peonReady = $false
+$peonFresh = $false
+
 if (Test-Path $peonHooksDir) {
+    # Install-only by design: an existing peon-ping is never upgraded here.
+    # Its config and Windows normalizations still get checked.
     Write-Success "peon-ping already installed (re-run its installer to update)"
+    $peonReady = $true
 } elseif (-not (Test-Path $claudeSettings)) {
     Write-Warning "~/.claude/settings.json not seeded yet - run agents/install.ps1 first, then re-run this bootstrap to get peon-ping"
 } else {
@@ -411,60 +511,8 @@ if (Test-Path $peonHooksDir) {
         & powershell -ExecutionPolicy Bypass -File (Join-Path $peonSrc "install.ps1") -Global
         if ((Test-Path $peonHooksDir) -and $LASTEXITCODE -eq 0) {
             Write-Success "peon-ping installed and hooks registered"
-            # Seed the shared config over the installer's default on fresh
-            # installs only, so per-machine tweaks survive later bootstrap runs.
-            # The seed's "packs" field is congruens's own (peon-ping ignores
-            # it): the shared roster of sound packs to pull onto every machine.
-            if (Test-Path $peonConfigSeed) {
-                Copy-Item -Path $peonConfigSeed -Destination (Join-Path $peonHooksDir "config.json") -Force
-                Write-Success "Seeded shared peon-ping config"
-                $peonPacks = @((Get-Content $peonConfigSeed -Raw | ConvertFrom-Json).packs) -join ","
-                if ($peonPacks) {
-                    & powershell -ExecutionPolicy Bypass -File (Join-Path $peonHooksDir "peon.ps1") packs install $peonPacks
-                    if ($LASTEXITCODE -ne 0) { Write-Warning "Some peon-ping packs failed to install" }
-                }
-            }
-
-            # --- congruens Windows normalizations (see .agents/napkin.md) ---
-            # 1) On Windows, peon renders desktop notifications as PowerShell-
-            #    branded toasts: it has no Windows overlay, the nice center banner
-            #    (orc icon, colour-by-source) is macOS-only. Turn them off for
-            #    Windows only, so it plays sounds without the toast spam. The shared
-            #    seed keeps desktop_notifications=true so Mac/Linux still get peon's
-            #    native overlay.
-            $peonCfgPath = Join-Path $peonHooksDir "config.json"
-            if (Test-Path $peonCfgPath) {
-                $peonCfg = Get-Content $peonCfgPath -Raw | ConvertFrom-Json
-                $peonCfg.desktop_notifications = $false
-                $peonCfg | ConvertTo-Json -Depth 20 | Set-Content -Path $peonCfgPath -Encoding utf8
-                Write-Success "Windows: disabled peon desktop notifications (sounds only)"
-            }
-
-            # 2) peon's installer subscribes to ~10 hook events, including
-            #    PreToolUse which fires on EVERY tool call, and rewrites
-            #    settings.json with a UTF-8 BOM via Windows PowerShell 5.1
-            #    Set-Content. The BOM makes Claude Desktop's strict JSON parser
-            #    reject its own config; PreToolUse floods the app with a PowerShell
-            #    spawn per tool call that can leak and destabilise it. Trim to the
-            #    low-frequency events and rewrite as UTF-8 without a BOM. Re-running
-            #    peon's own installer to update re-adds the full set, so re-run this
-            #    section after a peon-ping update.
-            $peonDropEvents = @('SubagentStart', 'PreToolUse', 'PostToolUseFailure', 'UserPromptSubmit')
-            try {
-                $s = Get-Content $claudeSettings -Raw | ConvertFrom-Json
-                if ($s.hooks) {
-                    foreach ($ev in $peonDropEvents) {
-                        if ($s.hooks.PSObject.Properties.Name -contains $ev) {
-                            $s.hooks.PSObject.Properties.Remove($ev)
-                        }
-                    }
-                    $settingsJson = $s | ConvertTo-Json -Depth 100
-                    [System.IO.File]::WriteAllText($claudeSettings, $settingsJson, [System.Text.UTF8Encoding]::new($false))
-                    Write-Success "Trimmed peon hooks ($($peonDropEvents -join ', ')) and stripped settings.json BOM"
-                }
-            } catch {
-                Write-Warning "Could not normalize peon hooks in settings.json: $_"
-            }
+            $peonReady = $true
+            $peonFresh = $true
         } else {
             Write-Warning "peon-ping install failed - see https://github.com/PeonPing/peon-ping"
         }
@@ -476,6 +524,11 @@ if (Test-Path $peonHooksDir) {
         Remove-Item $peonZip -ErrorAction SilentlyContinue
         Remove-Item $peonSrc -Recurse -ErrorAction SilentlyContinue
     }
+}
+
+if ($peonReady) {
+    Initialize-PeonConfig -Force:$peonFresh
+    Set-PeonWindowsNormalizations
 }
 
 # ============================================================================

@@ -717,10 +717,74 @@ print_step "Setting up peon-ping (Claude Code notifications)..."
 # seed step skip, and the machine would silently miss the shared config.
 
 PEON_HOOKS_DIR="$HOME/.claude/hooks/peon-ping"
+PEON_CONFIG="$PEON_HOOKS_DIR/config.json"
 PEON_CONFIG_SEED="$REPO_ROOT/agents/config/peon-ping.json"
 
+# Put the shared config and the sound packs it names in place. Runs whether or
+# not this bootstrap did the install, because the two drift apart: an install
+# from before the seed existed, or a config someone deleted, would otherwise
+# never be repaired - the old "hooks dir exists, skip everything" short-circuit
+# meant a machine could have peon-ping and no shared config forever.
+#
+# $1 is "force": true right after a fresh install, so the shared config beats
+# the default the installer just wrote; false on every later run, so
+# per-machine tweaks survive and only a missing config gets restored.
+seed_peon_config() {
+    local force="$1"
+
+    if [[ ! -d "$PEON_HOOKS_DIR" ]]; then
+        print_warning "peon-ping hooks dir not found at $PEON_HOOKS_DIR - skipping config seed"
+        return
+    fi
+    if [[ ! -f "$PEON_CONFIG_SEED" ]]; then
+        print_warning "peon-ping config seed not found at $PEON_CONFIG_SEED"
+        return
+    fi
+
+    if [[ -f "$PEON_CONFIG" && "$force" != true ]]; then
+        print_success "peon-ping config already present"
+    else
+        cp -f "$PEON_CONFIG_SEED" "$PEON_CONFIG"
+        print_success "Seeded shared peon-ping config"
+    fi
+
+    # The seed's "packs" field is congruens's own (peon-ping ignores it): the
+    # shared roster of sound packs to pull onto every machine. Each pack is a
+    # directory under packs/, so install only the ones that aren't there yet.
+    local packs
+    packs=$(jq -r '(.packs // [])[]' "$PEON_CONFIG_SEED" 2>/dev/null \
+        || python3 -c "import json; print('\n'.join(json.load(open('$PEON_CONFIG_SEED')).get('packs', [])))" 2>/dev/null \
+        || echo "")
+
+    local missing=()
+    local pack
+    while IFS= read -r pack; do
+        pack="${pack%$'\r'}"
+        [[ -n "$pack" ]] || continue
+        [[ -d "$PEON_HOOKS_DIR/packs/$pack" ]] || missing+=("$pack")
+    done <<< "$packs"
+
+    if [[ ${#missing[@]} -eq 0 ]]; then
+        print_success "peon-ping sound packs already installed"
+        return
+    fi
+
+    local pack_list
+    pack_list=$(IFS=','; echo "${missing[*]}")
+    if command -v peon &> /dev/null; then
+        peon packs install "$pack_list" || print_warning "Some peon-ping packs failed to install"
+    elif [[ -f "$PEON_HOOKS_DIR/peon.sh" ]]; then
+        bash "$PEON_HOOKS_DIR/peon.sh" packs install "$pack_list" || print_warning "Some peon-ping packs failed to install"
+    else
+        print_warning "peon CLI not found - install packs later with: peon packs install $pack_list"
+    fi
+}
+
 if [[ -d "$PEON_HOOKS_DIR" ]]; then
+    # Install-only by design: an existing peon-ping is never upgraded here.
+    # Its config still gets checked.
     print_success "peon-ping already installed (re-run its installer to update)"
+    seed_peon_config false
 elif [[ ! -f "$HOME/.claude/settings.json" ]]; then
     print_warning "~/.claude/settings.json not seeded yet - run agents/install.sh first, then re-run this bootstrap to get peon-ping"
 else
@@ -739,26 +803,7 @@ else
     fi
     if [[ "$PEON_INSTALLED" == true ]]; then
         print_success "peon-ping installed and hooks registered"
-        # Seed the shared config over the installer's default on fresh
-        # installs only, so per-machine tweaks survive later bootstrap runs.
-        # The seed's "packs" field is congruens's own (peon-ping ignores it):
-        # the shared roster of sound packs to pull onto every machine.
-        if [[ -f "$PEON_CONFIG_SEED" ]]; then
-            cp -f "$PEON_CONFIG_SEED" "$PEON_HOOKS_DIR/config.json"
-            print_success "Seeded shared peon-ping config"
-            PEON_PACKS=$(jq -r '(.packs // []) | join(",")' "$PEON_CONFIG_SEED" 2>/dev/null \
-                || python3 -c "import json; print(','.join(json.load(open('$PEON_CONFIG_SEED')).get('packs', [])))" 2>/dev/null \
-                || echo "")
-            if [[ -n "$PEON_PACKS" ]]; then
-                if command -v peon &> /dev/null; then
-                    peon packs install "$PEON_PACKS" || print_warning "Some peon-ping packs failed to install"
-                elif [[ -f "$PEON_HOOKS_DIR/peon.sh" ]]; then
-                    bash "$PEON_HOOKS_DIR/peon.sh" packs install "$PEON_PACKS" || print_warning "Some peon-ping packs failed to install"
-                else
-                    print_warning "peon CLI not found - install packs later with: peon packs install $PEON_PACKS"
-                fi
-            fi
-        fi
+        seed_peon_config true
     else
         print_warning "peon-ping install failed - see https://github.com/PeonPing/peon-ping"
     fi
