@@ -17,6 +17,7 @@
 - Write specifications in Lojbanlite, our controlled English for specs. Use the Lojbanlite skill to draft them, and to rework any spec that does not obey the rules. See "Specification Writing" below for what counts as a specification.
 - Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can. When a numbered list is unavoidable, keep its numbering stable for the whole thread (never renumber); I answer by number.
 - Every Question Tool round ends with one extra question: "Would you like to add anything else?", with "No" as the first (default) option and a free-text path for whatever I type. Some tools (Claude Code included) require at least two labeled options and provide free text via an automatic "Other"; there, make the second option "Yes, I'll type it" and treat any free-text reply as the actual answer. Reason: multiple-choice questions lead the witness, the options frame the answer space you imagined and quietly exclude everything else. The catch-all is my escape hatch for context you did not think to ask about. Never skip it because the other questions felt exhaustive.
+- Writing a commit message: invoke the Commit Message skill first, every single time, including one-liners, amends, fixups, and interactive-rebase rewords. No commit is too small for it. See "Git Workflow" below.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
 - Shipping C# changes: follow the C# Workflow Checklist under "Language Guidance" below.
 - Adding a dependency or provisioning a machine: both need my sign-off first; see "Dependencies & Provisioning" below.
@@ -29,6 +30,10 @@
   when the user is present**. This is a courtesy, not enforcement: explicitly
   requested unattended work may commit and push without asking. GitHub branch
   protection is the real backstop on branches where it matters.
+- **Every commit message goes through the Commit Message skill.** Invoke it before
+  each `git commit`, `git commit --amend`, squash/fixup message, and rebase reword,
+  with no exceptions for small commits. House standard: 50-character imperative
+  subject, blank line, body wrapped at 72 explaining what and why.
 - Never force-push, delete remote branches, or rewrite history. These are denied
   in config and stay off-limits regardless of context.
 - Commits are authored as the user, with no co-author trailer

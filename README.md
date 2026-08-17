@@ -66,7 +66,6 @@ congruens/
 │   │   └── agents/       # Shared subagent definitions
 │   ├── install.sh/.ps1   # Agent setup scripts
 │   └── settings_plan.md  # Permission guidelines for tool configs
-├── guides/               # Long-form notes and write-ups
 └── config/               # Configuration files (defaults + gitignored local override)
 ```
 
