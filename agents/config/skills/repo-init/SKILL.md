@@ -54,16 +54,16 @@ Do not create a conditional folder speculatively, and do not create placeholder 
 
 ## Fetching the templates
 
-Pull them from the `master` branch of archetype:
+Pull them from the `main` branch of archetype:
 
 | File | URL |
 |---|---|
-| repo-root ignore | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitignores/repo-root/.gitignore` |
-| attributes (git-lfs) | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitattributes/.gitattributes` |
-| Visual Studio / .NET | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitignores/visualstudio/.gitignore` |
-| Unity | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitignores/unity/.gitignore` |
-| Python | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitignores/python/.gitignore` |
-| JavaScript / TypeScript | `https://raw.githubusercontent.com/tomzorz/archetype/master/gitignores/javascript/.gitignore` |
+| repo-root ignore | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/repo-root/.gitignore` |
+| attributes (git-lfs) | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitattributes/.gitattributes` |
+| Visual Studio / .NET | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/visualstudio/.gitignore` |
+| Unity | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/unity/.gitignore` |
+| Python | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/python/.gitignore` |
+| JavaScript / TypeScript | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/javascript/.gitignore` |
 
 Check the response actually looks like a gitignore before writing it anywhere. A 404 page saved as `.gitignore` fails quietly and nobody notices until something secret gets committed.
 
