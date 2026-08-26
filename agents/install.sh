@@ -16,6 +16,8 @@ AGENTS_DIR="$DOTFILES_DIR/agents"
 CONFIG_DIR="$AGENTS_DIR/config"
 
 DRY_RUN=false
+CHECK_SETTINGS_ONLY=false
+BASELINE_SETTINGS=false
 
 # Parse arguments
 for arg in "$@"; do
@@ -23,11 +25,21 @@ for arg in "$@"; do
         --dry-run)
             DRY_RUN=true
             ;;
+        --check-settings)
+            CHECK_SETTINGS_ONLY=true
+            ;;
+        --baseline-settings)
+            BASELINE_SETTINGS=true
+            ;;
         --help|-h)
-            echo "Usage: $0 [--dry-run]"
+            echo "Usage: $0 [--dry-run] [--check-settings] [--baseline-settings]"
             echo ""
             echo "Options:"
-            echo "  --dry-run  Show what would be done without making changes"
+            echo "  --dry-run            Show what would be done without making changes"
+            echo "  --check-settings     Only report permission drift between the seed and"
+            echo "                       this machine's ~/.claude/settings.json, then exit"
+            echo "  --baseline-settings  Record the current seed as this machine's baseline,"
+            echo "                       silencing drift you have already decided about"
             exit 0
             ;;
     esac
@@ -159,12 +171,56 @@ set_env_var() {
     fi
 }
 
+# Run the shared drift checker. The JSON set logic lives in one Python script
+# rather than twice in bash and PowerShell, because a three-way diff
+# maintained in two languages is a diff waiting to disagree with itself.
+run_drift_check() {
+    local python_bin="" candidate
+    # Not just command -v: on Windows, python3 on PATH is usually the Microsoft
+    # Store's App Execution Alias, which exists, resolves, prints an ad for the
+    # Store and exits 49. Only a binary that actually runs code counts.
+    for candidate in python3 python py; do
+        if command -v "$candidate" >/dev/null 2>&1 && "$candidate" -c "import sys" >/dev/null 2>&1; then
+            python_bin="$candidate"
+            break
+        fi
+    done
+    if [[ -z "$python_bin" ]]; then
+        log_warn "No working python3 on PATH, skipping settings drift check"
+        return 2
+    fi
+    "$python_bin" "$AGENTS_DIR/check-settings-drift.py" \
+        --seed "$CONFIG_DIR/claude-settings.json" \
+        --live "$HOME/.claude/settings.json" \
+        --snapshot "$HOME/.claude/.congruens-seed.json" \
+        "$@"
+}
+
+# Report-only. settings.json is seeded once and never written again, so a
+# permissions change in the repo has to be replayed by hand on every host.
+# This is the part that tells you a host is behind.
+check_settings_drift() {
+    # Exit 1 just means drift was found; under set -e that would abort install.
+    run_drift_check || true
+}
+
 # Main installation
 main() {
     echo ""
     echo "Agent Configuration Installer"
     echo "=============================="
     echo ""
+
+    # Both of these are about settings.json only, so they run on their own and
+    # skip the symlinking entirely.
+    if $BASELINE_SETTINGS; then
+        run_drift_check --baseline
+        exit $?
+    fi
+    if $CHECK_SETTINGS_ONLY; then
+        run_drift_check && log_success "No permission drift against the congruens seed"
+        exit $?
+    fi
 
     if $DRY_RUN; then
         log_info "Dry run mode - no changes will be made"
@@ -194,14 +250,19 @@ main() {
     # create_symlink rm -rf's an existing target, which would silently destroy
     # a machine's local permission rules. (Mirrors install.ps1.)
     claude_settings="$HOME/.claude/settings.json"
+    claude_baseline="$HOME/.claude/.congruens-seed.json"
     if [[ -e "$claude_settings" || -L "$claude_settings" ]]; then
         log_info "Kept existing: $claude_settings (per-machine, not managed by congruens)"
+        check_settings_drift
     elif $DRY_RUN; then
         log_info "Would seed: $claude_settings (copy, not symlink)"
     else
         mkdir -p "$HOME/.claude"
         cp "$CONFIG_DIR/claude-settings.json" "$claude_settings"
         log_success "Seeded: $claude_settings (copy - edit locally, will not be overwritten)"
+        # A machine seeded now starts reconciled, so record the baseline that
+        # lets later runs tell an upstream change from a local edit.
+        run_drift_check --baseline || true
     fi
     # CLAUDE.md is the Claude Code equivalent of AGENTS.md
     if [[ -f "$CONFIG_DIR/AGENTS.md" ]]; then

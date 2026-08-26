@@ -9,16 +9,29 @@
 .PARAMETER DryRun
     Show what would be done without making changes
 
+.PARAMETER CheckSettings
+    Only report permission drift between the congruens seed and this machine's
+    ~/.claude/settings.json, then exit. Never writes to settings.json.
+
+.PARAMETER BaselineSettings
+    Record the current seed as this machine's baseline, silencing drift you
+    have already looked at and decided about.
+
 .EXAMPLE
     .\install.ps1
-    
+
 .EXAMPLE
     .\install.ps1 -DryRun
+
+.EXAMPLE
+    .\install.ps1 -CheckSettings
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$DryRun
+    [switch]$DryRun,
+    [switch]$CheckSettings,
+    [switch]$BaselineSettings
 )
 
 $ErrorActionPreference = 'Stop'
@@ -130,12 +143,76 @@ function Set-EnvVar {
     }
 }
 
+<#
+.SYNOPSIS
+    Run the shared settings drift checker.
+
+.DESCRIPTION
+    The JSON set logic lives in one Python script rather than twice in bash and
+    PowerShell, because a three-way diff maintained in two languages is a diff
+    waiting to disagree with itself. Returns the script's exit code, or 2 when
+    no usable interpreter is on PATH.
+#>
+function Invoke-DriftCheck {
+    param([switch]$Baseline)
+
+    $pythonBin = $null
+    # Not just Get-Command: on Windows, python3 on PATH is usually the Microsoft
+    # Store's App Execution Alias, which exists, resolves, prints an ad for the
+    # Store and exits 49. Only a binary that actually runs code counts.
+    # The stub writes its ad to stderr, and $ErrorActionPreference = 'Stop'
+    # promotes native stderr to a terminating NativeCommandError, which would
+    # abort the probe on the first candidate instead of trying the next one.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        foreach ($candidate in @('python3', 'python', 'py')) {
+            if (-not (Get-Command $candidate -ErrorAction SilentlyContinue)) { continue }
+            try { & $candidate -c "import sys" *> $null } catch { continue }
+            if ($LASTEXITCODE -eq 0) {
+                $pythonBin = $candidate
+                break
+            }
+        }
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
+    if (-not $pythonBin) {
+        Write-Warn "No working python3 on PATH, skipping settings drift check"
+        return 2
+    }
+
+    $checkArgs = @(
+        (Join-Path $AgentsDir 'check-settings-drift.py')
+        '--seed', (Join-Path $ConfigDir 'claude-settings.json')
+        '--live', (Join-Path $HOME '.claude\settings.json')
+        '--snapshot', (Join-Path $HOME '.claude\.congruens-seed.json')
+    )
+    if ($Baseline) { $checkArgs += '--baseline' }
+
+    # Out-Host, not the output stream: the caller pipes this function's return
+    # value around, and the report is for the human, not for the pipeline.
+    & $pythonBin @checkArgs | Out-Host
+    return $LASTEXITCODE
+}
+
 # Main installation
 function Install-AgentConfigs {
     Write-Host ""
     Write-Host "Agent Configuration Installer"
     Write-Host "=============================="
     Write-Host ""
+
+    # Both of these are about settings.json only, so they run on their own and
+    # skip the symlinking entirely.
+    if ($BaselineSettings) {
+        exit (Invoke-DriftCheck -Baseline)
+    }
+    if ($CheckSettings) {
+        $code = Invoke-DriftCheck
+        if ($code -eq 0) { Write-Success "No permission drift against the congruens seed" }
+        exit $code
+    }
 
     if ($DryRun) {
         Write-Info "Dry run mode - no changes will be made"
@@ -167,11 +244,17 @@ function Install-AgentConfigs {
     $claudeSettings = Join-Path $HOME '.claude\settings.json'
     if (Test-Path $claudeSettings) {
         Write-Info "Kept existing: $claudeSettings (per-machine, not managed by congruens)"
+        # Report-only. Seeded once means a permissions change in the repo has to
+        # be replayed by hand on every host; this is what tells you a host is behind.
+        Invoke-DriftCheck | Out-Null
     } elseif ($DryRun) {
         Write-Info "Would seed: $claudeSettings (copy, not symlink)"
     } else {
         Copy-Item -Path (Join-Path $ConfigDir 'claude-settings.json') -Destination $claudeSettings
         Write-Success "Seeded: $claudeSettings (copy - edit locally, will not be overwritten)"
+        # A machine seeded now starts reconciled, so record the baseline that
+        # lets later runs tell an upstream change from a local edit.
+        Invoke-DriftCheck -Baseline | Out-Null
     }
     # AGENTS.md lives in the config dir alongside the skills and agent definitions,
     # not at the repo root. Pointing at the root made both symlinks silently skip.

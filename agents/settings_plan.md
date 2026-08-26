@@ -128,4 +128,5 @@ Two primary modes should be defined:
 3. **Translate formats correctly:**
    - OpenCode: `"git status": "allow"` in a `permission.bash` object
    - Claude Code: `"Bash(git status)"` in `permissions.allow` / `permissions.deny` arrays
-4. **Test after changes** — verify the tool still starts and respects the new rules.
+4. **Test after changes** — verify the tool still starts and respects the new rules. Permission rules hot-reload, so probe the actual command rather than trusting the pattern. `Bash(git worktree *)` blocks `git worktree list` and does nothing at all to `git -C <path> worktree list`; the two look identical in the config file.
+5. **Remember the seed only reaches new machines** — `claude-settings.json` is copied into `~/.claude/settings.json` once and never rewritten, so a change here does not reach any machine that already has that file. Every existing host has to be edited by hand. `install.sh --check-settings` / `install.ps1 -CheckSettings` reports which rules a host is missing; see agents/README.md.
