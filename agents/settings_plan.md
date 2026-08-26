@@ -56,24 +56,28 @@ branch protection is the real backstop on branches where it matters.
 - Unstaging: `git restore --staged`
 - Publishing: `git push` (plain; force/delete/mirror variants stay denied)
 
+**Ask (explicitly listed, so a confirm prompt is guaranteed):**
+
+- `git rebase`. Rewriting history is worth a look before it happens, but denying it outright just pushed the work into `git -C` or a manual reflog dance. A prompt is the honest control here.
+
 **Ask (not listed either way, falls back to the default stance):**
 
-- `git merge`, `git rebase --continue` style flows, `git reset` (non-hard), `git revert`,
-  `git cherry-pick`, `git pull`, `git clone`, `git rm`, `git mv`, `git restore` (working tree)
+- `git merge`, `git reset` (non-hard), `git revert`, `git cherry-pick`, `git pull`, `git clone`, `git rm`, `git mv`, `git restore` (working tree)
+- `git worktree`, `git submodule`, `git bisect`. Previously denied under an "Advanced" bucket with no per-command reason. Worktrees are additive, bisect is a bounded checkout loop that `bisect reset` undoes, and submodule work only bites via `update --force` / `deinit`. None of that earns a hard deny.
 
 **Always deny (git destructive):**
 
 - Legacy branch/checkout: `git checkout` (use switch/restore), `git branch -d/-D/--delete`
-- History rewriting: `git rebase`, `git reset --hard`, `git filter-branch`, `git update-ref`,
-  `git replace`
+- History rewriting: `git reset --hard`, `git filter-branch`, `git update-ref`, `git replace`
 - Work destruction: `git stash drop/clear`, `git clean`
 - Dangerous pushes: `git push --force*/-f`, `git push --delete`, `git push * :*`, `git push --mirror`
 - Repository setup: `git init`
 - Tag mutations: `git tag -d/--delete/-a/-s`
-- Advanced: `git worktree`, `git submodule`, `git bisect`, `git reflog expire`, `git gc`,
-  `git prune`, `git notes`
+- Advanced: `git reflog expire`, `git gc`, `git prune`, `git notes`
 - Config mutations: `git config --global/--system/--unset`, `git config user.*`
 - Remote mutations: `git remote add/remove/rename/set-url`
+
+**Same speed-bump caveat as `gh` below, and it bites harder here.** These are prefix matches, so `git -C <path> worktree list` sails past a `git worktree *` deny without so much as a prompt (verified). On top of that, Claude Code's built-in worktree tooling never routes through Bash at all, so a `git worktree` deny was only ever stopping the agent from being explicit about what it was doing. Deny the things whose *effect* you cannot live with; use ask for the rest.
 
 ### GitHub CLI (`gh`)
 

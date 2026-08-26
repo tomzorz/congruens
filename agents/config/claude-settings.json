@@ -81,7 +81,6 @@
       "Bash(git branch -d *)",
       "Bash(git branch -D *)",
       "Bash(git branch --delete *)",
-      "Bash(git rebase *)",
       "Bash(git reset --hard)",
       "Bash(git reset --hard *)",
       "Bash(git stash drop *)",
@@ -104,9 +103,6 @@
       "Bash(git tag --delete *)",
       "Bash(git tag -a *)",
       "Bash(git tag -s *)",
-      "Bash(git worktree *)",
-      "Bash(git submodule *)",
-      "Bash(git bisect *)",
       "Bash(git reflog expire *)",
       "Bash(git gc *)",
       "Bash(git prune *)",
@@ -176,6 +172,9 @@
       "Read(**/*.p12)",
       "Read(**/.env)",
       "Read(**/.env.*)"
+    ],
+    "ask": [
+      "Bash(git rebase *)"
     ],
     "defaultMode": "default"
   },
