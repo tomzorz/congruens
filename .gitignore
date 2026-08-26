@@ -2,3 +2,9 @@ __pycache__/
 *.pyc
 .DS_Store
 agents/config/skills/peon-ping-*
+
+# opencode installs its plugin deps in place, next to opencode.json
+agents/config/node_modules/
+agents/config/package.json
+agents/config/bun.lock
+agents/config/package-lock.json
