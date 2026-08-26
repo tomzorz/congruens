@@ -13,6 +13,10 @@
     Only report permission drift between the congruens seed and this machine's
     ~/.claude/settings.json, then exit. Never writes to settings.json.
 
+.PARAMETER ApplySettings
+    Overwrite this machine's command rules with the seed's, backing up
+    settings.json first. Path and WebFetch rules are left alone.
+
 .PARAMETER BaselineSettings
     Record the current seed as this machine's baseline, silencing drift you
     have already looked at and decided about.
@@ -31,6 +35,7 @@
 param(
     [switch]$DryRun,
     [switch]$CheckSettings,
+    [switch]$ApplySettings,
     [switch]$BaselineSettings
 )
 
@@ -154,7 +159,7 @@ function Set-EnvVar {
     no usable interpreter is on PATH.
 #>
 function Invoke-DriftCheck {
-    param([switch]$Baseline)
+    param([switch]$Baseline, [switch]$Apply)
 
     $pythonBin = $null
     # Not just Get-Command: on Windows, python3 on PATH is usually the Microsoft
@@ -189,6 +194,7 @@ function Invoke-DriftCheck {
         '--snapshot', (Join-Path $HOME '.claude\.congruens-seed.json')
     )
     if ($Baseline) { $checkArgs += '--baseline' }
+    if ($Apply) { $checkArgs += '--apply' }
 
     # Out-Host, not the output stream: the caller pipes this function's return
     # value around, and the report is for the human, not for the pipeline.
@@ -203,8 +209,13 @@ function Install-AgentConfigs {
     Write-Host "=============================="
     Write-Host ""
 
-    # Both of these are about settings.json only, so they run on their own and
-    # skip the symlinking entirely.
+    # These are about settings.json only, so they run on their own and skip the
+    # symlinking entirely. -ApplySettings is never part of a normal install run:
+    # writing settings.json is the one thing the seed-once design exists to
+    # prevent, so it only ever happens because someone asked for it by name.
+    if ($ApplySettings) {
+        exit (Invoke-DriftCheck -Apply)
+    }
     if ($BaselineSettings) {
         exit (Invoke-DriftCheck -Baseline)
     }

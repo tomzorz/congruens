@@ -17,6 +17,7 @@ CONFIG_DIR="$AGENTS_DIR/config"
 
 DRY_RUN=false
 CHECK_SETTINGS_ONLY=false
+APPLY_SETTINGS=false
 BASELINE_SETTINGS=false
 
 # Parse arguments
@@ -28,16 +29,22 @@ for arg in "$@"; do
         --check-settings)
             CHECK_SETTINGS_ONLY=true
             ;;
+        --apply-settings)
+            APPLY_SETTINGS=true
+            ;;
         --baseline-settings)
             BASELINE_SETTINGS=true
             ;;
         --help|-h)
-            echo "Usage: $0 [--dry-run] [--check-settings] [--baseline-settings]"
+            echo "Usage: $0 [--dry-run] [--check-settings] [--apply-settings] [--baseline-settings]"
             echo ""
             echo "Options:"
             echo "  --dry-run            Show what would be done without making changes"
             echo "  --check-settings     Only report permission drift between the seed and"
             echo "                       this machine's ~/.claude/settings.json, then exit"
+            echo "  --apply-settings     Overwrite this machine's command rules with the"
+            echo "                       seed's, backing up settings.json first. Path and"
+            echo "                       WebFetch rules are left alone"
             echo "  --baseline-settings  Record the current seed as this machine's baseline,"
             echo "                       silencing drift you have already decided about"
             exit 0
@@ -211,8 +218,14 @@ main() {
     echo "=============================="
     echo ""
 
-    # Both of these are about settings.json only, so they run on their own and
-    # skip the symlinking entirely.
+    # These are about settings.json only, so they run on their own and skip the
+    # symlinking entirely. --apply-settings is never part of a normal install
+    # run: writing settings.json is the one thing the seed-once design exists
+    # to prevent, so it only ever happens because someone asked for it by name.
+    if $APPLY_SETTINGS; then
+        run_drift_check --apply
+        exit $?
+    fi
     if $BASELINE_SETTINGS; then
         run_drift_check --baseline
         exit $?

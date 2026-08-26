@@ -30,6 +30,11 @@ import sys
 # Which domains an agent may fetch is a per-machine call, same as paths.
 IGNORED_TOOLS = ("WebFetch",)
 
+# Rules that address the filesystem. Reported like anything else, but never
+# written by --apply: which paths a machine guards is the most host-specific
+# thing in the file, and the seed cannot know about your SMB shares.
+PATH_TOOLS = ("Read", "Edit", "Write", "Grep", "Glob", "NotebookEdit")
+
 BUCKETS = ("allow", "ask", "deny")
 
 
@@ -68,7 +73,18 @@ def rule_tool(rule):
 
 
 def interesting(rule):
+    """Worth reporting on."""
     return rule_tool(rule) not in IGNORED_TOOLS
+
+
+def syncable(rule):
+    """Worth letting the repo overwrite.
+
+    Narrower than interesting() on purpose: path rules are reported so you
+    find out about them, and left alone so nothing eats a machine's local
+    filesystem guards. A gap in a path rule stays a decision, not an update.
+    """
+    return interesting(rule) and rule_tool(rule) not in PATH_TOOLS
 
 
 def bucket_sets(permissions, home):
@@ -88,6 +104,13 @@ def main():
         action="store_true",
         help="record the current seed as this machine's baseline and exit, "
         "which is how you say 'I have read the delta, stop telling me'",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="hand the seed ownership of every non-path, non-WebFetch rule in "
+        "the live settings, backing the file up first. Path rules are left "
+        "alone however far they have drifted",
     )
     parser.add_argument("--home", default=os.path.expanduser("~"))
     args = parser.parse_args()
@@ -109,6 +132,9 @@ def main():
         return 0
     if live is UNREADABLE:
         return 2
+
+    if args.apply:
+        return apply_seed(args.seed, args.live, args.snapshot, args.home)
 
     snapshot = load_permissions(args.snapshot, "baseline snapshot")
     if snapshot is UNREADABLE:
@@ -145,16 +171,99 @@ def main():
     return 1
 
 
-def write_baseline(seed_path, snapshot_path):
+def apply_seed(seed_path, live_path, snapshot_path, home):
+    """Give the seed ownership of the command rules in the live settings.
+
+    Per bucket: drop every syncable live rule, then take the seed's. Anything
+    the filter does not claim (paths, WebFetch) is carried through untouched
+    and in its original order, so a machine keeps its own filesystem posture
+    no matter how far the command rules have moved.
+    """
     with open(seed_path, encoding="utf-8-sig") as handle:
         seed = json.load(handle)
+    with open(live_path, encoding="utf-8-sig") as handle:
+        live = json.load(handle)
+
+    seed_perms = seed.get("permissions", {})
+    live_perms = live.setdefault("permissions", {})
+
+    added, removed = {}, {}
+    for bucket in BUCKETS:
+        current = live_perms.get(bucket, [])
+        kept = [r for r in current if not syncable(r)]
+        incoming = [r for r in seed_perms.get(bucket, []) if syncable(r)]
+
+        before = {normalize(r, home) for r in current if syncable(r)}
+        after = {normalize(r, home) for r in incoming}
+        if after - before:
+            added[bucket] = sorted(after - before)
+        if before - after:
+            removed[bucket] = sorted(before - after)
+
+        merged = incoming + kept
+        if merged:
+            live_perms[bucket] = merged
+        elif bucket in live_perms:
+            del live_perms[bucket]
+
+    if not added and not removed:
+        print("[OK] Command rules already match the seed, nothing to apply")
+        write_baseline(seed_path, snapshot_path, only_syncable=True)
+        return 0
+
+    print("")
+    print("Applying the seed's command rules. Path and WebFetch rules untouched.")
+    for bucket in BUCKETS:
+        for rule in added.get(bucket, []):
+            print(f"  + {bucket}: {rule}")
+        for rule in removed.get(bucket, []):
+            print(f"  - {bucket}: {rule}")
+
+    backup = live_path + ".congruens-backup"
+    with open(live_path, "rb") as src, open(backup, "wb") as dst:
+        dst.write(src.read())
+
+    # Same file, replaced whole: a half-written settings.json is a bricked
+    # session, and permission changes are picked up live.
+    body = json.dumps(live, indent=2, ensure_ascii=False) + "\n"
+    json.loads(body)
+    with open(live_path, "w", encoding="utf-8", newline="\n") as handle:
+        handle.write(body)
+
+    print("")
+    print(f"[OK] Updated {live_path}")
+    print(f"[OK] Previous version kept at {backup}")
+    write_baseline(seed_path, snapshot_path, only_syncable=True)
+    return 0
+
+
+def write_baseline(seed_path, snapshot_path, only_syncable=False):
+    """Record what the seed looked like the last time this machine was settled.
+
+    --apply reconciles the command rules and deliberately does not touch path
+    rules, so it records only the part it actually reconciled. Recording the
+    whole seed there would mark a path gap as settled when nothing had been
+    done about it, and the check would go quiet on a rule you never got.
+    --baseline is the explicit "all of this is fine", so it records the lot.
+    """
+    with open(seed_path, encoding="utf-8-sig") as handle:
+        seed = json.load(handle)
+    permissions = seed.get("permissions", {})
+    if only_syncable:
+        permissions = {
+            bucket: [r for r in rules if syncable(r)]
+            for bucket, rules in permissions.items()
+            if isinstance(rules, list)
+        }
     os.makedirs(os.path.dirname(snapshot_path) or ".", exist_ok=True)
     payload = {
         "_comment": "Baseline written by congruens agents/check-settings-drift.py. "
         "Records the seed's permissions as of the last time this machine was "
         "reconciled, so the drift check can tell an upstream addition from a "
-        "deliberate local removal. Safe to delete; you just get noisier output.",
-        "permissions": seed.get("permissions", {}),
+        "deliberate local removal. Safe to delete; you just get noisier output."
+        + (" Command rules only: this machine was reconciled with --apply, "
+           "which leaves path rules alone." if only_syncable else ""),
+        "permissions": permissions,
     }
     with open(snapshot_path, "w", encoding="utf-8", newline="\n") as handle:
         json.dump(payload, handle, indent=2)
