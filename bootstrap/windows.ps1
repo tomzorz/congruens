@@ -435,7 +435,7 @@ function Initialize-PeonConfig {
     if ($LASTEXITCODE -ne 0) { Write-Warning "Some peon-ping packs failed to install" }
 }
 
-# --- congruens Windows normalizations (see .agents/napkin.md) ---
+# --- congruens Windows normalizations ---
 # Idempotent, and runs on every bootstrap rather than only after a fresh
 # install: peon's own updater re-adds the full hook set and the BOM, and the
 # resulting Claude Desktop breakage is bad enough that a bootstrap run should

@@ -6,10 +6,10 @@ description: |
   clear go/no-go recommendation. Prevents yak-shaving by forcing a bounded
   investigation with a decisive outcome. Spike code lives in a dedicated
   sandbox folder in the repo so proof-of-concept work is preserved and
-  reviewable. Results are saved as sticky notes for future reference.
+  reviewable. Findings are written up so they outlive the session.
 author: congruens
-version: 2.0.0
-date: 2026-02-20
+version: 2.1.0
+date: 2026-09-05
 ---
 
 # Spike
@@ -38,8 +38,8 @@ Use a spike when:
   trying it.
 - **You hit a wall** and you're not sure if the current approach is fixable
   or if you need to pivot.
-- **A low-confidence assumption** in your assumption log needs validation and
-  reading docs alone won't cut it; you need to try something.
+- **A load-bearing assumption** cannot be settled by reading alone; you need
+  to try something.
 
 Do NOT use a spike for things you can answer by reading docs or code. If the
 answer is in the source, just go read it.
@@ -85,12 +85,13 @@ README so its purpose is obvious to other contributors:
 # Spikes
 
 Throwaway proof-of-concept code from timeboxed technical investigations.
-Not production code. See `.agents/sticky-notes/` for spike findings.
+Not production code. Each subfolder's README says where its finding was
+written up.
 ```
 
 ### Organizing spike code in the sandbox
 
-Each spike gets its own subfolder named with the same slug as the sticky note:
+Each spike gets its own dated subfolder:
 
 ```
 spikes/
@@ -105,8 +106,8 @@ spikes/
 Rules:
 
 - **One subfolder per spike.** Don't dump loose files in the sandbox root.
-- **Name the subfolder with `YYYY-MM-DD-<slug>`** matching the sticky note
-  filename. This makes it trivial to cross-reference findings with code.
+- **Name the subfolder with `YYYY-MM-DD-<slug>`**, and use the same slug in
+  the write-up so findings and code cross-reference.
 - **Include a README.md** in the subfolder if the spike involves more than
   one file. Explain what to run and what to look at. Keep it brief.
 - **Don't polish the code.** This is throwaway work. Comments are fine,
@@ -156,29 +157,25 @@ Do the minimum work necessary to answer the question:
 - Search the web for known issues or gotchas.
 
 Stay focused. If you discover an interesting tangent, note it and come back
-to it later (use a Sticky Note). Do not follow the tangent during the spike.
+to it later. Do not follow the tangent during the spike.
 
 All code artifacts go in the sandbox subfolder. Do not write spike code in
-the main source tree, temp directories, or inline in the sticky note.
+the main source tree, temp directories, or inline in the write-up.
 
 ### 5. Record findings and verdict
 
 When the timebox expires (or you have your answer, whichever comes first),
-write up the result. The spike output is saved as a **Sticky Note** in
-`.agents/sticky-notes/` so it persists across sessions. The sticky note
-links back to the sandbox subfolder for the code.
+write up the result and put it where this repository keeps findings, so it
+outlives the session. If the repository has no such place, ask the user
+rather than inventing one. The write-up links back to the sandbox subfolder
+for the code.
 
 ## Spike Output Format
-
-Save as a sticky note with a filename like:
-`YYYY-MM-DD-spike-<question-slug>.md`
 
 ```markdown
 # Spike: <question in natural language>
 
 **Date**: YYYY-MM-DD
-**Category**: research
-**Status**: open
 **Timebox**: X minutes
 **Time spent**: Y minutes
 **Sandbox**: <relative path to spike subfolder, e.g. spikes/2026-02-20-signalr-realtime-notifications/>
@@ -213,33 +210,25 @@ test, or follow-up questions that emerged.
 - **Before starting**: Tell the user you're running a spike, what the question
   is, and what the timebox is. One sentence, not a ceremony.
 - **After finishing**: Share the verdict and a one-line summary. Point them to
-  the sticky note and sandbox subfolder if they want details.
+  the write-up and sandbox subfolder if they want details.
 - **If inconclusive**: Say so honestly. "I spent 10 minutes and couldn't
   confirm X. Here's what I found. Want me to spend more time or try a
   different angle?"
 
 ## Spike Lifecycle & Cleanup
 
-Spike sandbox subfolders follow the same lifecycle as their sticky notes:
+Spike sandbox subfolders follow the same lifecycle as their write-ups:
 
-- **While the sticky note is open**: keep the sandbox subfolder. Someone
+- **While the finding is open** (written up, not yet acted on): keep the
+  sandbox subfolder. Someone
   might want to re-run or extend the proof-of-concept.
 - **When the spike is acted on** (the approach is adopted into production
   code): delete the sandbox subfolder. The production code is the record now.
 - **When the spike is abandoned** (verdict was no-go and the team has moved
   on): delete the sandbox subfolder or leave it if it has historical value.
   Use your judgment.
-- **Periodic pruning**: when you prune stale sticky notes, prune the matching
-  sandbox subfolders too. Don't leave orphaned spike code lying around.
-
-## Integration with Other Skills
-
-- **Assumption Log**: If a spike was triggered by a low-confidence assumption,
-  update the assumption log row with the spike result.
-- **Sticky Notes**: Spike results ARE sticky notes. They use the same folder
-  and follow the same lifecycle (delete when acted on, prune when stale).
-- **Napkin**: If the spike reveals a non-obvious gotcha or pattern, log it in
-  the Napkin for long-term memory.
+- **Periodic pruning**: when a write-up is retired, prune the matching
+  sandbox subfolder too. Don't leave orphaned spike code lying around.
 
 ## Example
 
@@ -263,15 +252,12 @@ spikes/2026-02-20-signalr-realtime-notifications/
   README.md                # "run with: dotnet run, open test-client.html"
 ```
 
-**Sticky note saved as**:
-`2026-02-20-spike-can-signalr-handle-realtime-notifications-without-separate-websocket-server.md`
+**Write-up**:
 
 ```markdown
 # Spike: Can SignalR handle real-time notifications without a separate WebSocket server?
 
 **Date**: 2026-02-20
-**Category**: research
-**Status**: open
 **Timebox**: 10 minutes
 **Time spent**: 7 minutes
 **Sandbox**: spikes/2026-02-20-signalr-realtime-notifications/
@@ -301,7 +287,7 @@ need a standalone WebSocket server?
 ## Caveats & Open Questions
 
 - If we scale to multiple instances, we'll need a Redis backplane. Not
-  blocking, but worth a sticky note for later.
+  blocking, but worth noting for later.
 - Haven't tested auth integration with the existing JWT middleware, but the
   docs say it's supported via query string token for WebSocket connections.
 ```

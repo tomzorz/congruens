@@ -46,7 +46,6 @@ Do not use it to restructure a repo that already has a working layout of its own
 | `docs` | There is a document that is not the README, or more than one of them. Specs, install guides, third party API dumps. |
 | `data` | Sample or fixture files are needed to run the project, and they are shared between projects or too big or awkward to sit next to the tests. Fixtures that belong beside their tests stay beside their tests. |
 | `submodules` | Someone runs `git submodule add`. Nothing to anticipate. |
-| `.agents` | Agents work in this repository. Holds `napkin.md`, `sticky-notes/` and `assumptions/`, and gets committed, because the point of the napkin is that the next session reads it. |
 
 The reasoning behind the first four is the same: keep the repo root readable, keep raw assets out of the build tree (Unity in particular will generate `.meta` files for anything it can see), and give everyone one obvious place to look. `media` was called `assets` once; it got renamed so it stops colliding with Unity's `Assets`.
 
@@ -100,6 +99,6 @@ If a template turns out to be missing something while you are using it, that is 
 
 Archetype covers the skeleton and nothing else. Do not invent a README, a license, a CI workflow or an editor config as part of initializing a repo. If the user wants those, they will say so, and each one is its own decision.
 
-The `.agents` folder is the one exception, and only as far as archetype defines it: the folder itself, once agents are actually working in the repo. Writing an `AGENTS.md` or seeding napkin content is a separate decision and not part of init.
+`AGENTS.md` and `AGENTS.records.md` are not part of the skeleton either. Writing the agent profile is its own decision, and the records file comes from the `record-setup` skill on the day agents start working in the repo.
 
 Conditional elements cut both ways. Skipping a folder that has no content yet is correct, and so is creating one the moment its trigger fires. Do not talk someone out of a `docs/` folder when they have a spec in hand.
