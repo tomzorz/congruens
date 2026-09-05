@@ -55,6 +55,7 @@ branch protection is the real backstop on branches where it matters.
 - Stash forward ops: `git stash` (bare), `git stash push/pop/apply/show`
 - Unstaging: `git restore --staged`
 - Publishing: `git push` (plain; force/delete/mirror variants stay denied)
+- Fast-forward only: `git merge --ff-only`, `git pull --ff-only`. The git-workflow skill fast-forwards before every write; a fast-forward cannot lose work, and anything that would create a merge commit still falls to the ask tier.
 
 **Ask (explicitly listed, so a confirm prompt is guaranteed):**
 
@@ -125,7 +126,7 @@ Two primary modes should be defined:
 1. **Only add non-default settings** — don't redeclare defaults. If a tool allows all skills by default, don't add `"skill": { "*": "allow" }`.
 2. **Keep deny lists in sync** — if you add a new deny rule to one tool's config, add the equivalent to all others.
 3. **Translate formats correctly:**
-   - OpenCode: `"git status": "allow"` in a `permission.bash` object
+   - OpenCode: `"git status": "allow"` in a `permission.bash` object. **The last matching rule wins**, so a general pattern (`git push *`) must come before the specific ones that override it (`git push --force*`), never after. The seed had this backwards for months and the force-push deny was dead the whole time.
    - Claude Code: `"Bash(git status)"` in `permissions.allow` / `permissions.deny` arrays
 4. **Test after changes** — verify the tool still starts and respects the new rules. Permission rules hot-reload, so probe the actual command rather than trusting the pattern. `Bash(git worktree *)` blocks `git worktree list` and does nothing at all to `git -C <path> worktree list`; the two look identical in the config file.
 5. **Remember the seed only reaches new machines** — `claude-settings.json` is copied into `~/.claude/settings.json` once and never rewritten, so a change here does not reach any machine that already has that file. `install.sh --check-settings` reports what a host is missing, and `--apply-settings` hands the repo ownership of that host's command rules. Path and WebFetch rules stay per-machine either way, so a path rule added here still has to be replayed by hand. See agents/README.md.
