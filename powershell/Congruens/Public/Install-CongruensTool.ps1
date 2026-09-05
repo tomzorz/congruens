@@ -222,6 +222,8 @@ function Install-CongruensGitHubAsset {
     $url = "https://github.com/$($Spec.repo)/releases/latest/download/$asset"
 
     try {
+        # Progress bar off for the download: in PS7 the bar's per-chunk redraw
+        # makes Invoke-WebRequest -OutFile dramatically slower on large files.
         $previous = $ProgressPreference
         $ProgressPreference = 'SilentlyContinue'
         try {

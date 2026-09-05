@@ -156,6 +156,18 @@ listed here -- run `cgrman builtins` for the full set.
 Metadata for every built-in lives in `builtins/*.json`, which is what `cgrman` reads. Adding a
 command means adding a JSON file, not editing a list in code.
 
+### Adding a Built-In Command
+
+1. Add a `.ps1` under `powershell/Congruens/Public/` with a formal PascalCase function and a
+   short-name wrapper that splats `@PSBoundParameters` to it. Give it comment-based help, and a
+   `Register-ArgumentCompleter` for both names if it takes arguments.
+2. Export both names in `FunctionsToExport` in `powershell/Congruens/Congruens.psd1`, or the
+   function exists in module scope and nobody can call it.
+3. Drop a `builtins/<name>.json` with `name`, `description` and a `usage` list so `cgrman`
+   picks it up.
+4. Optionally add a tip line to `Show-Motd.ps1` so the command shows up in the startup rotation.
+5. `Import-Module Congruens -Force`, run the command, and check it appears in `cgrman builtins`.
+
 ### Tool Definitions
 
 Each file in `tools/` declares how to install a tool on each platform:
