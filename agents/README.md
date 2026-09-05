@@ -20,6 +20,23 @@ The install scripts:
 - Symlink skills into `~/.agents/` for the Agent Skills standard
 - Seed `~/.claude/settings.json` once, then report drift against it on later runs
 
+## Vendored skills
+
+Two of the skills under `config/skills/` are other people's work, copied in: `humanizer` and `visual-explainer` (see `ACKNOWLEDGEMENTS.md`). They are not submodules, because a skill directory has to be a plain folder of files for every tool that loads it, and they are not full copies of their upstream repos, because those repos carry plugin manifests, marketplace files, CI, npm packaging, MCP servers and slash-command wrappers that a skill folder has no use for.
+
+`vendored-skills.json` says, per skill, which repo and ref to pull, where the skill lives inside that repo, which paths under it to take, and which referenced paths are left out on purpose and why. `vendor-skills.py` does the pulling:
+
+```bash
+python3 agents/vendor-skills.py            # pull every skill that is behind
+python3 agents/vendor-skills.py humanizer  # pull one, even if already pinned
+python3 agents/vendor-skills.py --check    # exit 1 if any skill is behind, write nothing
+python3 agents/vendor-skills.py --dry-run  # download and report, write nothing
+```
+
+Each pull downloads the ref's tarball through GitHub's archive redirect (no API call for the download itself), replaces the skill folder wholesale with the included paths plus the upstream license, and records the commit under `pinned` in the manifest. It then reads every relative `./path` the new SKILL.md mentions and warns about any that is neither included nor listed under `omit`, which is how a new upstream folder gets noticed instead of silently missing. Review the diff, then commit; the script never commits.
+
+Local edits to a vendored skill do not survive the next pull. If something needs changing, change it upstream or keep the change as a separate congruens skill.
+
 ## Settings drift
 
 `~/.claude/settings.json` is the one file the installer copies instead of symlinking. Permissions genuinely differ per host (SMB paths on one machine, a different set of allowed domains on another), and a symlink would let one machine's edit rewrite everyone's rules. So it is seeded once and never written again.

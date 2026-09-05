@@ -9,7 +9,7 @@ Always define both light and dark palettes via custom properties. Start with whi
 ```css
 :root {
   --font-body: 'Outfit', system-ui, sans-serif;
-  --font-mono: 'Space Mono', 'SF Mono', Consolas, monospace;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
   --bg: #f8f9fa;
   --surface: #ffffff;
@@ -50,6 +50,26 @@ Always define both light and dark palettes via custom properties. Start with whi
 }
 ```
 
+## Type Scale (rem, one knob for scrollable pages)
+
+For non-slide, scrollable pages, size ordinary page text in `rem` against one root value so one line rescales the page without making reading text too small. The concrete selectors below are copyable CSS and meet the minimum effective sizes at a 16px root. Mermaid SVG labels remain in px because Mermaid sizes them through configuration. Slide decks are a separate contract: preserve their viewport-responsive `clamp(...px, ...vw, ...px)` typography and required `autoFit()` runtime fitting from `slide-patterns.md` and `slide-deck.html` instead of converting slide styles to rem.
+
+```css
+/* ONE TYPE KNOB: change this single value to rescale ordinary page text. */
+html { font-size: 16px; } /* choose a value in the 16–18px range */
+
+/* Role selectors below meet the minimums at a 16px root. */
+h1              { font-size: 2rem;      } /* 32px page title */
+h2, .sec-head   { font-size: 1.25rem;   } /* 20px section heads */
+h3, .card-title { font-size: 0.95rem;   } /* 15.2px card titles */
+body            { font-size: 0.875rem;  } /* 14px reading text */
+.secondary      { font-size: 0.75rem;   } /* 12px secondary text */
+code, pre       { font-size: 0.75rem;   } /* 12px code/mono */
+.label, .tag    { font-size: 0.6875rem; } /* 11px labels/tags */
+```
+
+When copying older reference snippets, convert ordinary page px values to this scale rather than copying them verbatim. Keep px where a rendering engine or the slide contract requires it.
+
 ## Background Atmosphere
 
 Flat backgrounds feel dead. Use subtle gradients or patterns.
@@ -86,12 +106,18 @@ body {
 }
 ```
 
-## Section / Node Cards
+## Link Styling
+
+**Never rely on browser default link colors.** The default blue (`#0000EE`) has poor contrast on dark backgrounds. Style links with `color: var(--accent)` and keep underlines for discoverability. On dark backgrounds, use bright accents (`#22d3ee`, `#34d399`, `#fbbf24`). On light backgrounds, use deeper tones (`#0891b2`, `#059669`, `#d97706`).
+
+## Section / Card Components
 
 The fundamental building block. A colored card representing a system component, pipeline step, or data entity.
 
+**IMPORTANT: Never use `.node` as a CSS class name.** Mermaid.js internally uses `.node` on its SVG `<g>` elements with `transform: translate(x, y)` for positioning. Any page-level `.node` styles (hover transforms, box-shadows, transitions) will leak into Mermaid diagrams and break their layout. Use `.ve-card` instead (namespaced to avoid collisions with CSS frameworks like Bootstrap/Tailwind that also use `.card`).
+
 ```css
-.node {
+.ve-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -100,34 +126,34 @@ The fundamental building block. A colored card representing a system component, 
 }
 
 /* Colored accent border (left or top) */
-.node--accent-a {
+.ve-card--accent-a {
   border-left: 3px solid var(--node-a);
 }
 
 /* --- Depth tiers: vary card depth to signal importance --- */
 
 /* Elevated: KPIs, key sections, anything that should pop */
-.node--elevated {
+.ve-card--elevated {
   background: var(--surface-elevated);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 /* Recessed: code blocks, secondary content, detail panels */
-.node--recessed {
+.ve-card--recessed {
   background: color-mix(in srgb, var(--bg) 70%, var(--surface) 30%);
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
   border-color: var(--border);
 }
 
 /* Hero: executive summaries, focal elements — demands attention */
-.node--hero {
+.ve-card--hero {
   background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
   border-color: color-mix(in srgb, var(--border) 50%, var(--accent) 50%);
 }
 
 /* Glass: special-occasion overlay effect (use sparingly) */
-.node--glass {
+.ve-card--glass {
   background: color-mix(in srgb, var(--surface) 60%, transparent 40%);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -135,7 +161,7 @@ The fundamental building block. A colored card representing a system component, 
 }
 
 /* Section label (monospace, uppercase, small) */
-.node__label {
+.ve-card__label {
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 600;
@@ -149,7 +175,7 @@ The fundamental building block. A colored card representing a system component, 
 }
 
 /* Colored dot indicator */
-.node__label::before {
+.ve-card__label::before {
   content: '';
   width: 8px;
   height: 8px;
@@ -157,6 +183,181 @@ The fundamental building block. A colored card representing a system component, 
   background: currentColor;
 }
 ```
+
+## Code Blocks
+
+Code blocks need explicit whitespace preservation and a max-height constraint. Without these, code runs together and long files overwhelm the page.
+
+### Basic Pattern
+
+```css
+.code-block {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  /* CRITICAL: preserve line breaks and indentation */
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Constrain height for long code */
+.code-block--scroll {
+  max-height: 400px;
+  overflow-y: auto;
+}
+```
+
+```html
+<pre class="code-block code-block--scroll"><code>// Your code here
+function example() {
+  return true;
+}</code></pre>
+```
+
+### With File Header
+
+```css
+.code-file {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.code-file__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.code-file__body {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  padding: 16px;
+  background: var(--surface-elevated);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 500px;
+  overflow: auto;
+}
+```
+
+```html
+<div class="code-file">
+  <div class="code-file__header">
+    <span>src/extension.ts</span>
+  </div>
+  <pre class="code-file__body"><code>export function activate() {
+  // ...
+}</code></pre>
+</div>
+```
+
+### Implementation Plans: Don't Dump Full Files
+
+For implementation plans and architecture docs, **don't display entire source files inline**. Instead:
+
+1. **Show structure, not code:**
+   ```html
+   <div class="file-structure">
+     <div class="file-structure__path">src/extension.ts</div>
+     <ul class="file-structure__outline">
+       <li><code>BOOMERANG_INSTRUCTIONS</code> — System prompt for autonomous mode</li>
+       <li><code>clearState()</code> — Reset extension state</li>
+       <li><code>updateStatus()</code> — Update UI status indicator</li>
+       <li><code>/boomerang</code> command — Start autonomous task</li>
+       <li><code>/boomerang-cancel</code> command — Cancel active task</li>
+       <li><code>before_agent_start</code> hook — Inject instructions</li>
+       <li><code>agent_end</code> hook — Generate summary</li>
+     </ul>
+   </div>
+   ```
+
+2. **Use collapsible sections for full code:**
+   ```html
+   <details class="collapsible">
+     <summary>Full implementation (87 lines)</summary>
+     <pre class="code-file__body"><code>...</code></pre>
+   </details>
+   ```
+
+3. **Show key snippets only:**
+   ```html
+   <p>The core logic intercepts task completion:</p>
+   <pre class="code-block"><code>pi.on("agent_end", async () => {
+     const summary = generateSummary(workEntries);
+     boomerangComplete = true;
+   });</code></pre>
+   ```
+
+**Anti-patterns:**
+- Displaying full source files inline (100+ lines overwhelming the page)
+- Code blocks without `white-space: pre-wrap` (code runs together into unreadable wall)
+- No height constraint on long code (page becomes endless scroll)
+
+If someone needs the full file, put it in a collapsible section or link to it.
+
+## Directory Tree
+
+For file structures, use `<pre>` with monospace + `white-space: pre`. Tree connectors (`├──`, `└──`, `│`) only work when vertically aligned — they become noise if text wraps.
+
+```css
+.dir-tree {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.7;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px 20px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.dir-tree .ann { color: var(--text-dim); font-size: 11px; font-style: italic; }
+.dir-tree .hl  { color: var(--accent); font-weight: 600; }
+```
+
+```html
+<pre class="dir-tree">my-project/
+├── src/
+│   ├── <span class="hl">index.ts</span>       <span class="ann">— entry point</span>
+│   ├── services/
+│   │   └── <span class="hl">api.py</span>     <span class="ann">(142 lines)</span>
+│   └── utils/
+├── tests/            <span class="ann">(14 test files)</span>
+└── README.md</pre>
+```
+
+For labeled trees, wrap in a card. For side-by-side comparisons, put two cards in a grid:
+
+```css
+.dir-tree-card { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+.dir-tree-card__header {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono); font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 1.5px;
+}
+.dir-tree-card .dir-tree { border: none; border-radius: 0; }
+
+/* Side-by-side: two .dir-tree-card in a grid */
+.dir-compare { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+@media (max-width: 900px) { .dir-compare { grid-template-columns: 1fr; } }
+```
+
+**Never** render tree connectors inside wrapping text (`white-space: normal`), flex children, or grid items — the vertical pipes lose alignment and the hierarchy becomes unreadable.
 
 ## Overflow Protection
 
@@ -227,11 +428,111 @@ li::before {
 }
 ```
 
-## Mermaid Zoom Controls
+### List markers overlapping container borders
 
-Mermaid diagrams are often too small to read comfortably, especially complex flowcharts and sequence diagrams. Add zoom controls to every `.mermaid-wrap` container.
+By default, `list-style-position: outside` places list markers (bullets, numbers) outside the content box. When lists are inside bordered containers (cards, callout boxes), the markers can overlap or extend beyond the border.
 
-### CSS
+```css
+/* WRONG — markers overlap container border */
+.card ol, .card ul {
+  padding-left: 20px;  /* Not enough for outside markers */
+}
+
+/* RIGHT — use inside positioning */
+.card ol, .card ul {
+  list-style-position: inside;
+}
+
+/* OR — adequate padding for outside markers */
+.card ol, .card ul {
+  padding-left: 2em;  /* ~32px gives room for markers */
+}
+
+/* OR — custom markers with absolute positioning (most control) */
+.card ol {
+  list-style: none;
+  padding-left: 0;
+  counter-reset: item;
+}
+.card ol li {
+  counter-increment: item;
+  padding-left: 2em;
+  position: relative;
+}
+.card ol li::before {
+  content: counter(item) ".";
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+  font-weight: 600;
+}
+```
+
+**Rule of thumb:** Any `<ol>` or `<ul>` inside a bordered container needs either `list-style-position: inside` or `padding-left: 2em` minimum. The default 20px padding is not enough for outside-positioned markers.
+
+## Mermaid Containers
+
+Mermaid diagrams have two common layout issues: they render too small to read, and they left-align in their container leaving awkward dead space (especially for narrow vertical flowcharts).
+
+### Centering (Required)
+
+Mermaid SVGs render at a fixed size based on content. Without explicit centering, they default to top-left alignment. **Always center Mermaid diagrams** — narrow vertical flowcharts look particularly bad when left-aligned in a wide container.
+
+```css
+/* WRONG — diagram hugs left edge */
+.mermaid-container {
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+
+/* RIGHT — diagram centers in container */
+.mermaid-wrap {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;  /* or center for shorter diagrams */
+  padding: 24px;
+  border: 1px solid var(--border);
+}
+```
+
+### Scaling Small Diagrams
+
+Mermaid sizes diagrams based on content, not container. Complex diagrams with many nodes render small to fit everything, leaving the text nearly unreadable. Three fixes:
+
+**1. Increase fontSize in themeVariables** (most effective):
+```javascript
+mermaid.initialize({
+  theme: 'base',
+  themeVariables: {
+    fontSize: '18px',  // default is 16px, bump to 18-20px for complex diagrams
+  }
+});
+```
+
+**2. CSS zoom** for diagrams that still render too small:
+```css
+.mermaid-wrap--scaled .mermaid {
+  zoom: 1.3;
+}
+```
+
+**3. Constrain container width** so the diagram doesn't float in dead space:
+```css
+.mermaid-wrap--constrained {
+  max-width: 800px;
+  margin: 0 auto;
+}
+```
+
+**Rule of thumb:** If the diagram has 10+ nodes or the text is smaller than 12px rendered, increase fontSize to 18-20px or apply CSS zoom.
+
+### Zoom Controls
+
+Add zoom controls to every `.mermaid-wrap` container for complex diagrams.
+
+**Small diagrams in slides.** If a diagram has fewer than ~7 nodes with no branching, it will render tiny in a full-viewport slide container. For simple linear flows (A → B → C → D), use CSS pipeline cards instead of Mermaid — see `slide-patterns.md` "CSS Pipeline Slide." Reserve Mermaid for complex graphs where automatic edge routing is actually needed.
+
+### Full Pattern
 
 ```css
 .mermaid-wrap {
@@ -241,18 +542,19 @@ Mermaid diagrams are often too small to read comfortably, especially complex flo
   border-radius: 12px;
   padding: 32px 24px;
   overflow: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
+  /* CRITICAL: center the diagram both horizontally and vertically */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* Prevent vertical flowcharts from compressing into unreadable thumbnails */
+  min-height: 400px;
 }
-.mermaid-wrap::-webkit-scrollbar { width: 6px; height: 6px; }
-.mermaid-wrap::-webkit-scrollbar-track { background: transparent; }
-.mermaid-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-.mermaid-wrap::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
-.mermaid-wrap .mermaid {
-  transition: transform 0.2s ease;
-  transform-origin: top center;
-}
+/* For shorter diagrams that don't need the full height */
+.mermaid-wrap--compact { min-height: 200px; }
+
+/* For very tall vertical flowcharts */
+.mermaid-wrap--tall { min-height: 600px; }
 
 .zoom-controls {
   position: absolute;
@@ -288,97 +590,147 @@ Mermaid diagrams are often too small to read comfortably, especially complex flo
   color: var(--text);
 }
 
-.mermaid-wrap.is-zoomed { cursor: grab; }
+.mermaid-wrap { cursor: grab; }
 .mermaid-wrap.is-panning { cursor: grabbing; user-select: none; }
 
-@media (prefers-reduced-motion: reduce) {
-  .mermaid-wrap .mermaid { transition: none; }
+/* Multi-diagram structure */
+.diagram-shell {
+  position: relative;
+}
+
+.diagram-shell__hint {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  opacity: 0.7;
+}
+
+.mermaid-viewport {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+}
+
+.mermaid-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.zoom-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  padding: 0 6px;
+  white-space: nowrap;
 }
 ```
+
+**How the new zoom/pan engine works:**
+
+The SVG is rendered into `.mermaid-canvas` which is absolutely positioned inside `.mermaid-viewport`. Zooming sets the SVG's `width` and `height` styles directly. Panning applies `transform: translate()` to the canvas. The viewport has `overflow: hidden` to clip the panned content. This approach avoids CSS `zoom` (which had cross-browser quirks) and gives precise control over the diagram's size and position.
 
 ### HTML
 
 ```html
-<div class="mermaid-wrap">
-  <div class="zoom-controls">
-    <button onclick="zoomDiagram(this, 1.2)" title="Zoom in">+</button>
-    <button onclick="zoomDiagram(this, 0.8)" title="Zoom out">&minus;</button>
-    <button onclick="resetZoom(this)" title="Reset zoom">&#8634;</button>
+<section class="diagram-shell">
+  <p class="diagram-shell__hint">
+    Ctrl/Cmd + wheel to zoom. Scroll to pan. Drag to pan when zoomed. Double-click to fit.
+  </p>
+  <div class="mermaid-wrap">
+    <div class="zoom-controls">
+      <button type="button" data-action="zoom-in" title="Zoom in">+</button>
+      <button type="button" data-action="zoom-out" title="Zoom out">&minus;</button>
+      <button type="button" data-action="zoom-fit" title="Smart fit">&#8634;</button>
+      <button type="button" data-action="zoom-one" title="1:1 zoom">1:1</button>
+      <button type="button" data-action="zoom-expand" title="Open full size">&#x26F6;</button>
+      <span class="zoom-label">Loading...</span>
+    </div>
+    <div class="mermaid-viewport">
+      <div class="mermaid mermaid-canvas"></div>
+    </div>
   </div>
-  <pre class="mermaid">
+  <script type="text/plain" class="diagram-source">
     graph TD
       A --> B
-  </pre>
-</div>
+  </script>
+</section>
 ```
+
+Use one `.diagram-shell` per diagram. The source Mermaid text lives in `<script type="text/plain" class="diagram-source">`, so multiple diagrams can coexist on a page without ID collisions.
 
 ### JavaScript
 
-Add once at the end of the page. Handles button clicks and scroll-to-zoom on all `.mermaid-wrap` containers:
+Use a closure-based initializer. Per-diagram state lives inside `initDiagram(shell)`, while shared drag listeners stay at module scope:
 
 ```javascript
-function updateZoomState(wrap) {
-  var target = wrap.querySelector('.mermaid');
-  var zoom = parseFloat(target.dataset.zoom || '1');
-  wrap.classList.toggle('is-zoomed', zoom > 1);
+const config = { /* fitPadding, zoom bounds, readabilityFloor */ };
+const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
+let activeDrag = null;
+
+addEventListener('mousemove', (e) => activeDrag?.onMove(e));
+addEventListener('mouseup', () => { activeDrag?.onEnd(); activeDrag = null; });
+
+function initDiagram(shell) {
+  const wrap = shell.querySelector('.mermaid-wrap');
+  const viewport = shell.querySelector('.mermaid-viewport');
+  const canvas = shell.querySelector('.mermaid-canvas');
+  const source = shell.querySelector('.diagram-source');
+  const label = shell.querySelector('.zoom-label');
+
+  if (!wrap || !viewport || !canvas || !source || !label) {
+    console.error('initDiagram: missing required elements in', shell);
+    return;
+  }
+
+  // Per-diagram state in closure
+  let zoom = 1;
+  let fitMode = 'contain';
+  let panX = 0;
+  let panY = 0;
+  let svgW = 0;
+  let svgH = 0;
+
+  async function render() {
+    try {
+      const code = source.textContent.trim();
+      if (!code) {
+        label.textContent = 'Error: Empty source';
+        return;
+      }
+
+      const id = 'diagram-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+      const { svg } = await mermaid.render(id, code);
+      const parsed = new DOMParser().parseFromString(svg, 'text/html');
+      const parsedSvg = parsed.body.querySelector('svg');
+      if (!parsedSvg) throw new Error('Mermaid produced no SVG');
+      canvas.replaceChildren(document.adoptNode(parsedSvg));
+
+      // readSvgNaturalSize(svgNode) + setAdaptiveHeight() + fitDiagram()
+      // wire controls from data-action attributes
+      // wire wheel/drag/touch handlers scoped to this shell
+    } catch (err) {
+      console.error('Mermaid render failed:', err);
+      label.textContent = 'Error: ' + (err.message || 'Render failed');
+    }
+  }
+
+  render();
 }
 
-function zoomDiagram(btn, factor) {
-  var wrap = btn.closest('.mermaid-wrap');
-  var target = wrap.querySelector('.mermaid');
-  var current = parseFloat(target.dataset.zoom || '1');
-  var next = Math.min(Math.max(current * factor, 0.3), 5);
-  target.dataset.zoom = next;
-  target.style.transform = 'scale(' + next + ')';
-  updateZoomState(wrap);
-}
-
-function resetZoom(btn) {
-  var wrap = btn.closest('.mermaid-wrap');
-  var target = wrap.querySelector('.mermaid');
-  target.dataset.zoom = '1';
-  target.style.transform = 'scale(1)';
-  updateZoomState(wrap);
-}
-
-document.querySelectorAll('.mermaid-wrap').forEach(function(wrap) {
-  // Ctrl/Cmd + scroll to zoom
-  wrap.addEventListener('wheel', function(e) {
-    if (!e.ctrlKey && !e.metaKey) return;
-    e.preventDefault();
-    var target = wrap.querySelector('.mermaid');
-    var current = parseFloat(target.dataset.zoom || '1');
-    var factor = e.deltaY < 0 ? 1.1 : 0.9;
-    var next = Math.min(Math.max(current * factor, 0.3), 5);
-    target.dataset.zoom = next;
-    target.style.transform = 'scale(' + next + ')';
-    updateZoomState(wrap);
-  }, { passive: false });
-
-  // Click-and-drag to pan when zoomed
-  var startX, startY, scrollL, scrollT;
-  wrap.addEventListener('mousedown', function(e) {
-    if (e.target.closest('.zoom-controls')) return;
-    var target = wrap.querySelector('.mermaid');
-    if (parseFloat(target.dataset.zoom || '1') <= 1) return;
-    wrap.classList.add('is-panning');
-    startX = e.clientX;
-    startY = e.clientY;
-    scrollL = wrap.scrollLeft;
-    scrollT = wrap.scrollTop;
-  });
-  window.addEventListener('mousemove', function(e) {
-    if (!wrap.classList.contains('is-panning')) return;
-    wrap.scrollLeft = scrollL - (e.clientX - startX);
-    wrap.scrollTop = scrollT - (e.clientY - startY);
-  });
-  window.addEventListener('mouseup', function() {
-    wrap.classList.remove('is-panning');
-  });
-});
+document.querySelectorAll('.diagram-shell').forEach(initDiagram);
 ```
 
-Scroll-to-zoom requires Ctrl/Cmd+scroll to avoid hijacking normal page scroll. Click-and-drag panning activates only when zoomed in (zoom > 1). Cursor changes to `grab`/`grabbing` to signal the behavior. The zoom range is capped at 0.3x–5x.
+This pattern removes all hardcoded IDs and supports unlimited diagrams per page. For the full implementation (including smart fit, pinch zoom, and shared drag state), use `templates/mermaid-flowchart.html` as the canonical source.
+
+### Mermaid SVG insertion
+
+Mermaid 10+ can emit HTML inside SVG `<foreignObject>` labels, including unclosed HTML tags such as `<br>`. Do not parse Mermaid output with `DOMParser(..., 'image/svg+xml')`: the strict XML parser can silently truncate labels or edges. Avoid `canvas.innerHTML = svg` in reusable templates too, because security scanners often flag it as an HTML sink.
+
+Use `DOMParser(..., 'text/html')`, then adopt the parsed `<svg>` node into the canvas. The HTML parser accepts Mermaid's label markup and preserves the SVG namespace for browser rendering.
 
 ## Grid Layouts
 
@@ -701,7 +1053,7 @@ Define the keyframe once, then stagger via a `--i` CSS variable set per element.
   to { opacity: 1; transform: translateY(0); }
 }
 
-.node {
+.ve-card {
   animation: fadeUp 0.4s ease-out both;
   animation-delay: calc(var(--i, 0) * 0.05s);
 }
@@ -710,20 +1062,20 @@ Define the keyframe once, then stagger via a `--i` CSS variable set per element.
 Set `--i` per element in the HTML to control stagger order:
 
 ```html
-<div class="node" style="--i: 0">First</div>
+<div class="ve-card" style="--i: 0">First</div>
 <div class="connector">...</div>
-<div class="node" style="--i: 1">Second</div>
+<div class="ve-card" style="--i: 1">Second</div>
 <div class="connector">...</div>
-<div class="node" style="--i: 2">Third</div>
+<div class="ve-card" style="--i: 2">Third</div>
 ```
 
 ### Hover Lift
 ```css
-.node {
+.ve-card {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.node:hover {
+.ve-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
@@ -1071,6 +1423,317 @@ details.collapsible .collapsible__body {
   </div>
 </details>
 ```
+
+## Prose Page Elements
+
+Patterns for documentation, articles, blog posts, and other reading-first content. The key difference from visual explanations: optimize for sustained reading, not scanning.
+
+### Body Text Settings
+
+```css
+/* Comfortable reading baseline */
+.prose {
+  font-size: clamp(17px, 1.1vw + 14px, 19px);
+  line-height: 1.7;
+  max-width: 65ch;  /* ~600-680px */
+  text-wrap: pretty;
+}
+
+.prose p {
+  margin-bottom: 1.5em;
+}
+
+/* Narrow column for essays/literary content */
+.prose--narrow {
+  max-width: 60ch;
+  line-height: 1.8;
+}
+
+/* Wide column for technical content with code */
+.prose--wide {
+  max-width: 75ch;
+  line-height: 1.6;
+}
+```
+
+### Lead Paragraph
+
+Opening paragraph styled distinctly from body text.
+
+```css
+/* Larger size */
+.lead {
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--text-bright);
+  margin-bottom: 32px;
+}
+
+/* With drop cap */
+.lead--dropcap::first-letter {
+  float: left;
+  font-family: var(--font-display);
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 0.85;
+  padding-right: 12px;
+  padding-top: 6px;
+  color: var(--accent);
+}
+```
+
+### Pull Quotes
+
+Key insights pulled out for emphasis. Use sparingly — one or two per article maximum.
+
+```css
+/* Border left — most versatile */
+.pullquote {
+  margin: 48px 0;
+  padding-left: 24px;
+  border-left: 3px solid var(--accent);
+}
+.pullquote p {
+  font-size: 22px;
+  font-style: italic;
+  line-height: 1.4;
+  color: var(--text-bright);
+  margin: 0;
+}
+
+/* Centered with quotation mark */
+.pullquote--centered {
+  margin: 56px 0;
+  padding: 32px 40px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+}
+.pullquote--centered::before {
+  content: '"';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  padding: 0 16px;
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--accent);
+  line-height: 1;
+}
+```
+
+### Section Dividers
+
+```css
+/* Horizontal rule */
+hr {
+  border: none;
+  height: 1px;
+  background: var(--border);
+  margin: 48px 0;
+}
+
+/* Ornamental divider — use: <div class="divider">✦ ✦ ✦</div> */
+.divider {
+  text-align: center;
+  margin: 48px 0;
+  color: var(--text-dim);
+  font-size: 18px;
+  letter-spacing: 12px;
+}
+```
+
+### Article Hero Patterns
+
+```css
+/* Centered minimal — essays, personal posts */
+.hero--centered {
+  text-align: center;
+  padding: 80px 24px 64px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+.hero__category {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.hero__title {
+  font-size: clamp(32px, 5vw, 48px);
+  font-weight: 600;
+  line-height: 1.15;
+  margin-bottom: 16px;
+}
+.hero__subtitle {
+  font-size: 20px;
+  font-style: italic;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+.hero__meta {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+/* Left-aligned editorial — features, documentation */
+.hero--editorial {
+  padding: 100px 40px 60px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+.hero--editorial .hero__title {
+  font-size: clamp(40px, 7vw, 72px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -2px;
+}
+```
+
+### Author Byline
+
+```css
+.byline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+.byline__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.byline__name {
+  font-weight: 600;
+  color: var(--text-bright);
+  display: block;
+}
+.byline__meta {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+```
+
+### Callout Boxes
+
+For warnings, tips, notes, and key takeaways.
+
+```css
+.callout {
+  padding: 16px 20px;
+  border-radius: 8px;
+  border-left: 4px solid var(--callout-border);
+  background: var(--callout-bg);
+  margin: 24px 0;
+}
+
+.callout--info {
+  --callout-border: var(--accent);
+  --callout-bg: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.callout--warning {
+  --callout-border: var(--amber);
+  --callout-bg: color-mix(in srgb, var(--amber) 10%, transparent);
+}
+
+.callout--success {
+  --callout-border: var(--green);
+  --callout-bg: color-mix(in srgb, var(--green) 10%, transparent);
+}
+
+.callout__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--callout-border);
+}
+
+/* Lists inside callouts need padding fix */
+.callout ul, .callout ol {
+  padding-left: 1.5em;
+  margin: 8px 0 0 0;
+}
+```
+
+### Theme Toggle
+
+Use `data-theme` attribute for user-controllable light/dark modes. Random initial theme adds variety.
+
+```css
+:root, [data-theme="light"] {
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --text: #1c1917;
+  --text-dim: #78716c;
+  --border: #e7e5e4;
+  --accent: #0d9488;
+}
+
+[data-theme="dark"] {
+  --bg: #0c0a09;
+  --surface: #1c1917;
+  --text: #fafaf9;
+  --text-dim: #a8a29e;
+  --border: #292524;
+  --accent: #14b8a6;
+}
+```
+
+```javascript
+// Random initial theme
+const themes = ['light', 'dark'];
+document.documentElement.setAttribute('data-theme', themes[Math.floor(Math.random() * 2)]);
+
+// Toggle function
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', current === 'light' ? 'dark' : 'light');
+}
+```
+
+```html
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme">
+  <svg class="theme-toggle__sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+  </svg>
+  <svg class="theme-toggle__moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+  </svg>
+</button>
+```
+
+```css
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  z-index: 100;
+}
+[data-theme="light"] .theme-toggle__moon { display: none; }
+[data-theme="dark"] .theme-toggle__sun { display: none; }
+```
+
+### Prose Anti-Patterns
+
+Avoid these in reading-first content:
+- Body text smaller than 16px
+- Line-height below 1.5
+- Measure wider than 75ch (text spanning full viewport)
+- Pull quotes every other paragraph
+- Drop caps on every section
+- Busy background patterns behind text
 
 ## Generated Images
 
