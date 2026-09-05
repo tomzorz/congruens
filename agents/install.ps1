@@ -127,6 +127,27 @@ function New-SymbolicLinkSafe {
     return $true
 }
 
+function Remove-StaleLink {
+    param(
+        [string]$Target,
+        [string]$Source
+    )
+
+    # Get-Item, not Test-Path: Test-Path follows the link and says false for
+    # exactly the dangling case this exists to catch.
+    $item = Get-Item -LiteralPath $Target -Force -ErrorAction SilentlyContinue
+    if (-not $item -or $item.LinkType -ne 'SymbolicLink' -or $item.Target -ne $Source) { return }
+
+    if ($DryRun) {
+        Write-Info "Would remove stale link: $Target"
+        return
+    }
+    # Directory.Delete removes the reparse point only and never recurses into
+    # whatever the link points at, which Remove-Item -Recurse would happily do.
+    [System.IO.Directory]::Delete($Target)
+    Write-Warn "Removed stale link: $Target (no longer provided by congruens)"
+}
+
 function Set-EnvVar {
     param(
         [string]$Name,
@@ -247,7 +268,10 @@ function Install-AgentConfigs {
     # Claude Code symlinks
     Write-Host "Claude Code:"
     New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'skills') -Target (Join-Path $HOME '.claude\skills') | Out-Null
-    New-SymbolicLinkSafe -Source (Join-Path $ConfigDir 'agents') -Target (Join-Path $HOME '.claude\agents') | Out-Null
+    # Subagent definitions were dropped (altplanner became a skill, the rest
+    # were deleted). A machine installed before that still has the link, now
+    # dangling, so clear it instead of leaving junk in ~/.claude.
+    Remove-StaleLink -Target (Join-Path $HOME '.claude\agents') -Source (Join-Path $ConfigDir 'agents')
     # settings.json is per-machine: permissions and enabled plugins differ by host.
     # Seed it once as a real file, then never touch it again. Do NOT symlink -
     # New-SymbolicLinkSafe force-removes an existing target, which would silently

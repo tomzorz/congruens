@@ -1,6 +1,6 @@
 # Agent Configuration
 
-Shared skills, subagents, and settings for AI coding assistants (OpenCode, Claude Code, and other [Agent Skills](https://agentskills.io)-compatible tools).
+Shared skills and settings for AI coding assistants (OpenCode, Claude Code, and other [Agent Skills](https://agentskills.io)-compatible tools).
 
 ## Installation
 
@@ -16,7 +16,7 @@ Shared skills, subagents, and settings for AI coding assistants (OpenCode, Claud
 
 The install scripts:
 - Set `OPENCODE_CONFIG_DIR` to point to `agents/config/`
-- Symlink skills and agents into `~/.claude/` for Claude Code
+- Symlink skills into `~/.claude/` for Claude Code
 - Symlink skills into `~/.agents/` for the Agent Skills standard
 - Seed `~/.claude/settings.json` once, then report drift against it on later runs
 

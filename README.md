@@ -43,7 +43,7 @@ The bootstrap scripts will:
 The agents install script will:
 1. Set the `OPENCODE_CONFIG_DIR` env var for OpenCode
 2. Create symlinks for Claude Code and Agent Skills standard
-3. Link shared skills and agent definitions
+3. Link the shared skills and agent profile
 
 ## Repository Structure
 
@@ -62,8 +62,7 @@ congruens/
 ├── bootstrap/            # Platform-specific bootstrap scripts
 ├── agents/               # AI agent configurations (portable across tools)
 │   ├── config/           # Config dir (OPENCODE_CONFIG_DIR points here)
-│   │   ├── skills/       # Shared agent skills
-│   │   └── agents/       # Shared subagent definitions
+│   │   └── skills/       # Shared agent skills
 │   ├── install.sh/.ps1   # Agent setup scripts
 │   └── settings_plan.md  # Permission guidelines for tool configs
 └── config/               # Configuration files (defaults + gitignored local override)

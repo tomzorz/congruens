@@ -131,6 +131,22 @@ _sed_i() {
 }
 
 # Add env var to shell profile
+# Remove a symlink congruens created that no longer has a source. Only touches
+# a link pointing at the given source, so a user's own link of the same name
+# is left alone.
+remove_stale_link() {
+    local target="$1"
+    local source="$2"
+    [[ -L "$target" ]] || return 0
+    [[ "$(readlink "$target")" == "$source" ]] || return 0
+    if $DRY_RUN; then
+        log_info "Would remove stale link: $target"
+    else
+        rm "$target"
+        log_warn "Removed stale link: $target (no longer provided by congruens)"
+    fi
+}
+
 set_env_var() {
     local var_name="$1"
     local var_value="$2"
@@ -257,7 +273,10 @@ main() {
     # Claude Code symlinks
     echo "Claude Code:"
     create_symlink "$CONFIG_DIR/skills" "$HOME/.claude/skills" || true
-    create_symlink "$CONFIG_DIR/agents" "$HOME/.claude/agents" || true
+    # Subagent definitions were dropped (altplanner became a skill, the rest
+    # were deleted). A machine installed before that still has the link, now
+    # dangling, so clear it instead of leaving junk in ~/.claude.
+    remove_stale_link "$HOME/.claude/agents" "$CONFIG_DIR/agents"
     # settings.json is per-machine: permissions and enabled plugins differ by host.
     # Seed it once as a real file, then never touch it again. Do NOT symlink -
     # create_symlink rm -rf's an existing target, which would silently destroy

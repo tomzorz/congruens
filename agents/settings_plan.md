@@ -102,10 +102,9 @@ branch protection is the real backstop on branches where it matters.
 - **Sensitive patterns** (never auto-read): `.env`, `.env.*`, `*.pem`, `*.key`, `*_rsa`, `id_*`, `*.p12`, `*.pfx`, `credentials*`, `secrets*`, `*password*`, `*token*`
 - **Read-only patterns**: `node_modules/**`, `.git/objects/**`, `vendor/**`, `dist/**`, `build/**`
 
-### Skills & Subagents
+### Skills
 
 - All skills allowed by default (`*: allow`)
-- All subagents allowed by default (`*: allow`)
 - Prefix `internal-*` for skills that should be denied in shared contexts
 
 ---
