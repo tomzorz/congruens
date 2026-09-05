@@ -41,6 +41,11 @@
   the user's own keys or their password-manager SSH agent. Key locations and env
   overrides are machine-specific and documented on each machine, never in this
   repo.
+- `git -C <path> <subcommand>` matches none of the curated allow or deny
+  patterns, so every such call falls to the classifier. `cd` into the
+  repository and use plain `git <subcommand>` forms; the working directory
+  persists between shell calls. Do not add a `git -C` allow to compensate:
+  the force-push and deletion denies would not cover the `-C` spellings.
 
 ## Mindset & Process
 
@@ -52,6 +57,7 @@
 - **Think hard, do not lose the plot**.
 - Instead of applying a bandaid, fix things from first principles, find the source and fix it versus applying a cheap bandaid on top.
 - **Search before pivoting**. If you are stuck or uncertain, do a quick web search for official docs or specs, then continue with the current approach. Do not change direction unless asked.
+- **Diagnostic discipline.** Never collapse "cannot read X" into "X does not exist": a permission failure and an absence want opposite advice. When two bugs can present with one symptom, find the observation that separates them (a missing log line, a request that never arrived) before naming a cause. When asked to tighten something, check the current state first; the tightening may already exist and the real defect be elsewhere.
 
 ## Specification Writing
 
@@ -85,6 +91,7 @@ rework, the violated rule IDs, and the list of ambiguities the original left unr
   - **CMD / batch**: `> NUL` or `2> NUL`
   - **git-bash / MSYS2**: `> /dev/null` or `2> /dev/null`
   - **NEVER** use `2>nul` in git-bash. MSYS2 does not translate `nul` to the Windows NUL device. It creates a literal file named `nul`, which is a reserved device name on Windows and cannot be deleted through normal means (Explorer, `rm`, `del` all fail). If this happens, the only known fix is Python: `ctypes.windll.kernel32.DeleteFileW("\\\\?\\<absolute-path>\\nul")`.
+- **Git Bash on Windows mangles absolute paths handed to native binaries.** `taskkill /PID n` arrives as `C:/Program Files/Git/PID`: write `//PID //T //F`, or call it from Python where no shell is involved. `docker exec c /command/x` and `-v /host:/container` need `MSYS_NO_PATHCONV=1`. Windows `curl` cannot open an MSYS path like `/tmp/x`: convert with `cygpath -m` first. `tofu -chdir=/i/...` breaks the same way: `cd` into the directory and run the tool bare. And `where.exe bash` finds `C:\Windows\System32\bash.exe` (WSL) before Git's; name the Git one explicitly in any script that needs bash.
 
 ## Final Handoff
 
@@ -105,6 +112,7 @@ Before finishing a task:
 - **Never estimate time effort unless explicitly asked.** No "this would take a week by hand", no "quick 2-hour fix", no "saves you days". Those numbers assume old-school hand-written dev pace and they are almost always nonsense in an agentic workflow. If scoping matters, describe scope in concrete terms instead: files touched, steps involved, risk, what could go wrong. If I want a time estimate, I will ask for one.
 - Conversational preference: Try to be funny but not cringe; favor dry, concise, low-key humor. If uncertain a joke will land, do not attempt humor. Avoid forced memes or flattery.
 - Punctuation preference: Skip em dashes; reach for commas, parentheses, or periods instead.
+- Markdown prose is one logical line per paragraph, never column-wrapped; editors soft-wrap. Older files that are hard-wrapped are not evidence of current style and are not reflowed retroactively, because a reflow is a churn diff.
 - Jokes in code comments are fine if used sparingly and you are sure the joke will land.
 - Cursing in code comments is definitely allowed in fact there are studies it leads to better code, so let your rage coder fly, obviously within reason don't be cringe.
 - **Mutual respect means honesty**. If I say something stupid, call me on it. I'll do the same for you.
