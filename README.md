@@ -65,7 +65,7 @@ congruens/
 │   │   └── skills/       # Shared agent skills
 │   ├── install.sh/.ps1   # Agent setup scripts
 │   └── settings_plan.md  # Permission guidelines for tool configs
-└── config/               # Configuration files (defaults + gitignored local override)
+└── config/               # fastfetch config for the motd
 ```
 
 ## How It Works
@@ -286,7 +286,6 @@ A two-line powerline prompt:
 ## Configuration
 
 - **Clone location:** Anywhere you like -- all scripts resolve paths relative to the repo
-- **Local overrides:** `config/congruens.local.json` (gitignored)
 - **Git config:** Use git's include directive to source shared settings
 
 ## Design Principles

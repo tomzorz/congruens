@@ -525,25 +525,6 @@ else
 fi
 
 # ============================================================================
-# Local Config Setup
-# ============================================================================
-
-print_step "Setting up configuration..."
-
-CONFIG_PATH="$REPO_ROOT/config"
-DEFAULTS_PATH="$CONFIG_PATH/congruens.defaults.json"
-LOCAL_PATH="$CONFIG_PATH/congruens.local.json"
-
-if [[ -f "$LOCAL_PATH" ]]; then
-    print_success "Local config already exists"
-elif [[ -f "$DEFAULTS_PATH" ]]; then
-    cp "$DEFAULTS_PATH" "$LOCAL_PATH"
-    print_success "Created local config from defaults"
-else
-    print_warning "Defaults config not found"
-fi
-
-# ============================================================================
 # Claude Code Notifications (peon-ping)
 # ============================================================================
 

@@ -362,25 +362,6 @@ if ($fontInstalled) {
 }
 
 # ============================================================================
-# Local Config Setup
-# ============================================================================
-
-Write-Step "Setting up configuration..."
-
-$configPath = Join-Path $repoRoot "config"
-$defaultsPath = Join-Path $configPath "congruens.defaults.json"
-$localPath = Join-Path $configPath "congruens.local.json"
-
-if (Test-Path $localPath) {
-    Write-Success "Local config already exists"
-} elseif (Test-Path $defaultsPath) {
-    Copy-Item -Path $defaultsPath -Destination $localPath
-    Write-Success "Created local config from defaults"
-} else {
-    Write-Warning "Defaults config not found"
-}
-
-# ============================================================================
 # Claude Code Notifications (peon-ping)
 # ============================================================================
 
