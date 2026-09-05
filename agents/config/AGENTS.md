@@ -14,10 +14,11 @@
 - Write specifications in Lojbanlite, our controlled English for specs. Use the Lojbanlite skill to draft them, and to rework any spec that does not obey the rules. See "Specification Writing" below for what counts as a specification.
 - Instead of presenting me with a numbered list of questions or topics to answer, use the Question Tool whenever you can. When a numbered list is unavoidable, keep its numbering stable for the whole thread (never renumber); I answer by number.
 - Every Question Tool round ends with one extra question: "Would you like to add anything else?", with "No" as the first (default) option and a free-text path for whatever I type. Some tools (Claude Code included) require at least two labeled options and provide free text via an automatic "Other"; there, make the second option "Yes, I'll type it" and treat any free-text reply as the actual answer. Reason: multiple-choice questions lead the witness, the options frame the answer space you imagined and quietly exclude everything else. The catch-all is my escape hatch for context you did not think to ask about. Never skip it because the other questions felt exhaustive.
+- Touching a git repository, whether starting work in one, cloning, branching, committing or pushing: invoke the Git Workflow skill first. It decides whether the repo is single-branch (one current checkout, commit to main) or multi-branch (base checkout parked on the default branch, work in a sibling worktree on a `username/kind/description` branch cut from the latest remote default), and asks when it cannot tell.
 - Writing a commit message: invoke the Commit Message skill first, every single time, including one-liners, amends, fixups, and interactive-rebase rewords. No commit is too small for it. See "Git Workflow" below.
 - Creating a new repository, or adding a project inside an existing one: invoke the Repo Init skill first. Repo skeletons follow `archetype`, and its templates get fetched from there, never retyped from memory.
 - Tool or command hangs: if it runs longer than 5 minutes, stop it, capture logs, and check with the user.
-- Shipping C# changes: follow the C# Workflow Checklist under "Language Guidance" below.
+- Writing or changing code: invoke the Coding skill first. It holds the general coding rules (order of work, cleanup, testing, choosing a dependency) and names the per-language skills to invoke alongside it when you touch C#, Python, TypeScript, or HTML and CSS. This profile says nothing about code on purpose.
 - Adding a dependency or provisioning a machine: both need my sign-off first; see "Dependencies & Provisioning" below.
 - So I can verify you read and understood these instructions use a challenge-response scheme. When I say "Uncertainty Romeo Kilo" you reply with "Family Alpha Mike. Reflections Juliet Oscar". 
 
@@ -48,22 +49,9 @@
 - **Verify before asserting**. Claims about external products, APIs, or docs get checked against the actual source (open it in the browser) or explicitly flagged as unverified. Never paraphrase a source you have not opened; invented specifics are worse than admitted uncertainty.
 - **"Don't overthink" ends the thread**. When the user says "don't overthink", "dw", or "doesn't matter", drop that concern entirely: no hedging follow-ups, no gold-plating, no quietly revisiting it later.
 - **Autonomy cadence**. Once a codified plan exists (spec, plan doc, agreed design), keep working to the next natural decision point and batch questions up instead of checking in per step. Without such a plan, stay interactive.
-- **No breadcrumbs**. If you delete or move code, do not leave a comment in the old place. No "// moved to X", no "relocated". Just remove it.
 - **Think hard, do not lose the plot**.
 - Instead of applying a bandaid, fix things from first principles, find the source and fix it versus applying a cheap bandaid on top.
-- When taking on new work, follow this order:
-  1. Think about the architecture.
-  1. Research official docs, blogs, or papers on the best architecture.
-  1. Review the existing codebase.
-  1. Compare the research with the codebase to choose the best fit.
-  1. Implement the fix or ask about the tradeoffs the user is willing to make.
-- Write idiomatic, simple, maintainable code. Always ask yourself if this is the most simple intuitive solution to the problem.
-- Leave each repo better than how you found it. If something is giving a code smell, fix it for the next person.
-- Clean up unused code ruthlessly. If a function no longer needs a parameter or a helper is dead, delete it and update the callers instead of letting the junk linger.
 - **Search before pivoting**. If you are stuck or uncertain, do a quick web search for official docs or specs, then continue with the current approach. Do not change direction unless asked.
-- If code is very confusing or hard to understand:
-  1. Try to simplify it.
-  1. Add an ASCII art diagram in a code comment if it would help.
 
 ## Specification Writing
 
@@ -98,81 +86,6 @@ rework, the violated rule IDs, and the list of ambiguities the original left unr
   - **git-bash / MSYS2**: `> /dev/null` or `2> /dev/null`
   - **NEVER** use `2>nul` in git-bash. MSYS2 does not translate `nul` to the Windows NUL device. It creates a literal file named `nul`, which is a reserved device name on Windows and cannot be deleted through normal means (Explorer, `rm`, `del` all fail). If this happens, the only known fix is Python: `ctypes.windll.kernel32.DeleteFileW("\\\\?\\<absolute-path>\\nul")`.
 
-## Testing Philosophy
-
-- Avoid mock tests; do unit or e2e instead. Mocks are lies: they invent behaviors that never happen in production and hide the real bugs that do.
-- Test everything with rigor. Our intent is ensuring a new person contributing to the same code base cannot break our stuff and that nothing slips by. We love rigour.
-- Unless the user asks otherwise, run only the tests you added or modified instead of the entire suite to avoid wasting time.
-
-## Language Guidance
-
-### C#
-
-- **Ternary over if-else**: Prefer `? :` conditional expressions over declaring a variable then assigning it in if/else branches. If the ternary becomes unreadable (deeply nested, very long), break it across lines or fall back to if/else.
-  ```csharp
-  // Good: ternary assignment
-  var label = isActive ? "Active" : "Inactive";
-
-  // Bad: unnecessary if-else for a simple assignment
-  string label;
-  if (isActive)
-      label = "Active";
-  else
-      label = "Inactive";
-  ```
-- **Brace style**: Single-statement branches (if, else, for, foreach, etc.) go on the same line with no braces. If the body goes on a separate line, it MUST have braces (Allman style). Never a bare statement on its own line without braces.
-  ```csharp
-  // Good: single statement, same line, no braces
-  if (condition) return value;
-  if (x > 0) DoSomething();
-  foreach (var item in items) Process(item);
-
-  // Good: multi-line body, always braces (Allman)
-  if (condition)
-  {
-      DoFirstThing();
-      DoSecondThing();
-  }
-
-  // Bad: separate line without braces (dangling statement)
-  if (condition)
-      DoSomething();
-  ```
-- Prefer strong types over strings; use enums and record types when the domain is closed or needs validation.
-- Handle exceptions properly; avoid swallowing exceptions without logging or rethrowing.
-- Prefer `async`/`await` over blocking calls like `.Result` or `.Wait()`.
-- Use `var` when the type is obvious from the right-hand side; use explicit types when it aids readability.
-- **XML doc style**: Always use multi-line `<summary>` tags with the opening and closing tags on their own lines. Never use single-line `<summary>Text</summary>`.
-  ```csharp
-  // Good: tags on separate lines
-  /// <summary>
-  /// Registers all platform services. Call this once from Program.cs.
-  /// </summary>
-  public static void AddPlatformServices(this IServiceCollection services)
-
-  // Bad: single-line summary
-  /// <summary>Registers all platform services.</summary>
-  public static void AddPlatformServices(this IServiceCollection services)
-  ```
-- **`<inheritdoc />`**: Only use on methods that actually override a base class or implement an interface. Never use on constructors or methods that have no parent definition to inherit from.
-
-#### C# Workflow Checklist
-
-1. Run `dotnet format`.
-2. Run `dotnet build --warnaserror` and address any warnings.
-3. Execute the relevant `dotnet test` to cover unit and end-to-end paths.
-
-### TypeScript
-
-- Do not use `any`; we are better than that.
-- Using `as` is bad, use the types given everywhere and model the real shapes.
-- If the app is for a browser, assume we use all modern browsers unless otherwise specified, we don't need most polyfills.
-
-### Python
-
-- **Python repos standard**. We use `uv` and `pyproject.toml` in all Python repos. Prefer `uv sync` for env and dependency resolution. Do not introduce `pip` venvs, Poetry, or `requirements.txt` unless asked. If you add a Nix shell, include `uv`.
-- Use strong types, prefer type hints everywhere, keep models explicit instead of loose dicts or strings.
-
 ## Final Handoff
 
 Before finishing a task:
@@ -183,7 +96,7 @@ Before finishing a task:
 
 ## Dependencies & Provisioning
 
-- If you need to add a new dependency to a project to solve an issue, search the web and find the best, most maintained option. Something most other folks use with the best exposed API. We don't want to be in a situation where we are using an unmaintained dependency, that no one else relies on. Confirm fit with me before adding it.
+- Adding a dependency to a project needs my sign-off before it lands. The Coding skill says how to pick one worth proposing.
 - Provisioning a machine or environment: present the tool/package list with one-line justifications and let me prune it before installing, flagging which picks come from an agreed source and which are your own judgment. A plan doc sitting in a repo is intent, not sign-off; additions layered on top of it are doubly not.
 
 ## Communication Preferences
