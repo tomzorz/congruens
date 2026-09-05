@@ -64,6 +64,9 @@ free-text path second. The branches, in order:
    does a no-go finding with nothing to inform go: README section
    (recommended) or nowhere.
 6. **Diagrams.** `docs/diagrams/` (recommended), another path, or not kept.
+   Whatever is chosen overrides the drawing skill's own default location
+   for diagrams worth keeping; transient review pages stay where that
+   skill puts them.
 7. **Parked work.** Issues on the host (recommended when hosted), a named
    external tracker, a TODO comment at the site, or nowhere.
 8. **Spikes.** Sandbox folder name, committed or ignored. Reuse an existing

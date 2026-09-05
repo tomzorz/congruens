@@ -123,6 +123,17 @@ easiest thing to forget and the most expensive to repeat. Everything else
 waits for a natural boundary. Do not stop mid-task to record something that
 will still be true in an hour.
 
+## Precedence over other skills
+
+Other skills carry their own idea of where output lands: the visual
+explainer writes pages to `~/.agent/diagrams/`, a spike write-up goes
+"where the repository keeps findings". Those are fallbacks. When the
+area's records file has a row for that kind, the records file wins, and the
+other skill's location is used only for output the records file does not
+keep (a review page that is transient by definition, for example). This is
+how a vendored skill that cannot be edited still respects the area, and it
+is why the records file has a row for every kind, including "nowhere".
+
 ## Outward actions
 
 Creating a ticket writes to a tracker other people see. Draft it, show it,
