@@ -63,6 +63,8 @@ Pull them from the `main` branch of archetype:
 | Unity | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/unity/.gitignore` |
 | Python | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/python/.gitignore` |
 | JavaScript / TypeScript | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/javascript/.gitignore` |
+| Go | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/go/.gitignore` |
+| Xcode (XcodeGen-generated Swift apps) | `https://raw.githubusercontent.com/tomzorz/archetype/main/gitignores/xcode/.gitignore` |
 
 Check the response actually looks like a gitignore before writing it anywhere. A 404 page saved as `.gitignore` fails quietly and nobody notices until something secret gets committed.
 
