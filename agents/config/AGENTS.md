@@ -26,9 +26,10 @@
 
 ## Git Workflow
 
-- Git write operations (add, commit, switch, branch, stash, fetch, push) are
-  enabled in the permission config, but **ask before `git commit` and `git push`
-  when the user is present**. This is a courtesy, not enforcement: explicitly
+- Git write operations (add, commit, switch, branch, stash, fetch, push,
+  worktree, and fast-forward-only merge and pull) are enabled in the
+  permission config, but **ask before `git commit` and `git push` when the
+  user is present**. This is a courtesy, not enforcement: explicitly
   requested unattended work may commit and push without asking. GitHub branch
   protection is the real backstop on branches where it matters.
 - **Every commit message goes through the Commit Message skill.** Invoke it before
