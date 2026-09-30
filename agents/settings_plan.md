@@ -71,7 +71,7 @@ branch protection is the real backstop on branches where it matters.
 - Legacy branch/checkout: `git checkout` (use switch/restore), `git branch -d/-D/--delete`
 - History rewriting: `git reset --hard`, `git filter-branch`, `git update-ref`, `git replace`
 - Work destruction: `git stash drop/clear`, `git clean`
-- Dangerous pushes: `git push --force*/-f`, `git push --delete`, `git push * :*`, `git push --mirror`
+- Dangerous pushes: `git push --force*/-f`, `git push * +*` (force refspec), `git push --delete/-d`, `git push * :**` (delete refspec; a trailing `:*` would parse as legacy prefix syntax and match nothing), `git push --mirror`
 - Repository setup: `git init`
 - Tag mutations: `git tag -d/--delete/-a/-s`
 - Advanced: `git reflog expire`, `git gc`, `git prune`, `git notes`
