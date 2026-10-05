@@ -123,6 +123,25 @@ easiest thing to forget and the most expensive to repeat. Everything else
 waits for a natural boundary. Do not stop mid-task to record something that
 will still be true in an hour.
 
+## Pointers
+
+Most records point at something else. Where the target lives decides the
+form:
+
+- Inside the same repository, link relatively. A docs folder links only
+  among its own files and names code by its path without linking into it,
+  so the folder can move as a whole.
+- Across a repository boundary, name the repository, by its root or its
+  README, and add an identifier the repository keeps stable when the reader
+  needs one: a phase, a decision ID, a heading. Never a path to a file
+  inside it. That path breaks the first time the other repository
+  reorganises, and nobody on that side knows the pointer exists.
+- Configuration that executes something, such as a launch command or a
+  tool's path, is not a pointer and keeps its path.
+
+When a repository moves its files, fixing the pointers inside it is part of
+the move; pointers from outside need nothing if they followed this rule.
+
 ## Precedence over other skills
 
 Other skills carry their own idea of where output lands: the visual
