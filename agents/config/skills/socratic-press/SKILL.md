@@ -81,8 +81,8 @@ Not every category applies. Stop when the plan is solid.
 Every question goes through the Question Tool. The first option is your
 recommendation, marked as such, so the user has something concrete to
 react to: agreement is faster than invention. The remaining options are
-the genuine alternatives. Every round ends with the catch-all question,
-"No" first and a free-text path second. A recommendation shows you thought
+the genuine alternatives. Every round carries the catch-all as the shared
+profile defines it. A recommendation shows you thought
 about it; it is not the answer until the user picks it.
 
 ### Label the answer, then follow it

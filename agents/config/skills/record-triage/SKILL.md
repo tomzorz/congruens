@@ -81,7 +81,8 @@ Before writing anything, show the whole batch as one table: entry (short),
 source file, verdict, and for Route the kind and destination. Four or more
 rows means an HTML page through the Visual Explainer, not a markdown table
 in chat. Every Unsure row goes through the Question Tool, with the most
-likely verdict first, and the round ends with the catch-all question.
+likely verdict first, and the round carries the catch-all as the shared
+profile defines it.
 
 Wait for approval. The user may overrule any row.
 

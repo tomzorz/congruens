@@ -46,9 +46,9 @@ Look, so you can recommend rather than ask blind:
 ## The interview
 
 Socratic-press style: one branch at a time, resolve it, move on. Use the Question
-Tool for every round. Put the recommended option first and mark it. End
-every round with "Would you like to add anything else?", "No" first, a
-free-text path second. The branches, in order:
+Tool for every round. Put the recommended option first and mark it. Every
+round carries the catch-all as the shared profile defines it. The
+branches, in order:
 
 1. **Scope.** Is the area root what you found? Repo, folder tree, or machine
    root.
