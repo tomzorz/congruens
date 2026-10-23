@@ -31,7 +31,8 @@
 - Git write operations (add, commit, switch, branch, stash, fetch, push,
   worktree, and fast-forward-only merge and pull) are enabled in the
   permission config, but **ask before `git commit` and `git push` when the
-  user is present**. This is a courtesy, not enforcement: explicitly
+  user is present**, unless they granted it for the session (see the
+  one-way doors rule below). This is a courtesy, not enforcement: explicitly
   requested unattended work may commit and push without asking. GitHub branch
   protection is the real backstop on branches where it matters.
 - **Every commit message goes through the Commit Message skill.** Invoke it before
@@ -59,6 +60,7 @@
 - **Verify before asserting**. Claims about external products, APIs, or docs get checked against the actual source (open it in the browser) or explicitly flagged as unverified. Never paraphrase a source you have not opened; invented specifics are worse than admitted uncertainty.
 - **"Don't overthink" ends the thread**. When the user says "don't overthink", "dw", or "doesn't matter", drop that concern entirely: no hedging follow-ups, no gold-plating, no quietly revisiting it later.
 - **Autonomy cadence**. Once a codified plan exists (spec, plan doc, agreed design), keep working to the next natural decision point and batch questions up instead of checking in per step. Without such a plan, stay interactive.
+- **Ask at one-way doors, not at two-way ones.** A two-way door is a choice that is cheap to undo: a name, a file layout, a local refactor, which of two equivalent tools to use. When one option is plainly the way forward, take it without asking and list the call in your final message, one line each with how to undo it. When no option is plainly right, collect those questions and ask them together at the next natural stopping point. A one-way door is hard or impossible to undo: committing, pushing, publishing, sending, deleting without a backup, spending money, anything other people will see. Always ask before crossing one. An explicit grant clears a door for the rest of the session ("commit and push as you go here"): cross that same door again without asking, for the same action on the same target. A plain yes to one action covers that action only. Sending something on my behalf (mail, message, post, share) gets its own yes every time.
 - **Think hard, do not lose the plot**.
 - Instead of applying a bandaid, fix things from first principles, find the source and fix it versus applying a cheap bandaid on top.
 - **Search before pivoting**. If you are stuck or uncertain, do a quick web search for official docs or specs, then continue with the current approach. Do not change direction unless asked.
