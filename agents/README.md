@@ -37,6 +37,29 @@ Each pull downloads the ref's tarball through GitHub's archive redirect (no API 
 
 Local edits to a vendored skill do not survive the next pull. If something needs changing, change it upstream or keep the change as a separate congruens skill.
 
+## Hooks
+
+`config/hooks/` holds Claude Code hooks, stdlib Python, each one's docstring saying what it does and why:
+
+- `scratch_env.py` (SessionStart) exports `$SCRATCH`, the session's scratchpad directory, to every later Bash call, subagents included, and tells the session it exists.
+- `ask_catch_all.py` (PreToolUse on `AskUserQuestion`) appends the profile's "Would you like to add anything else?" question to every round of two or three questions, and turns a round of four away, since the tool takes no more. Registered on SessionStart as well, it tells the session the hook is active, which is the profile's cue to stop writing the catch-all by hand. Without that registration the hook is only a safety net for rounds that forgot it.
+
+The seed does not register them, because a hook command needs the absolute path to this checkout. Add them to `~/.claude/settings.json` by hand, with the path adjusted:
+
+```json
+"hooks": {
+  "SessionStart": [
+    { "matcher": "", "hooks": [{ "type": "command", "command": "python <congruens>/agents/config/hooks/scratch_env.py", "timeout": 10 }] },
+    { "matcher": "", "hooks": [{ "type": "command", "command": "python <congruens>/agents/config/hooks/ask_catch_all.py", "timeout": 10 }] }
+  ],
+  "PreToolUse": [
+    { "matcher": "AskUserQuestion", "hooks": [{ "type": "command", "command": "python <congruens>/agents/config/hooks/ask_catch_all.py", "timeout": 10 }] }
+  ]
+}
+```
+
+Tests run the scripts as real processes: `python -m unittest discover -s agents/config/hooks`.
+
 ## Settings drift
 
 `~/.claude/settings.json` is the one file the installer copies instead of symlinking. Permissions genuinely differ per host (SMB paths on one machine, a different set of allowed domains on another), and a symlink would let one machine's edit rewrite everyone's rules. So it is seeded once and never written again.
