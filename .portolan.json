@@ -1,0 +1,4 @@
+{
+  "$schema": "https://raw.githubusercontent.com/tomzorz/portolan/main/docs/project.schema.json",
+  "description": "Cross-platform terminal and agent environment: PowerShell 7 and oh-my-posh setup, declarative tool definitions, and the shared coding-agent profile, skills, hooks and settings seed symlinked into each machine."
+}
