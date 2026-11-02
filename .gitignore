@@ -3,6 +3,11 @@ __pycache__/
 .DS_Store
 agents/config/skills/peon-ping-*
 
+# The Claude desktop app syncs account skills into ~/.claude/skills/synced/,
+# which is this folder through the symlink. Not ours, and the folder name
+# carries the account's org and user ids.
+agents/config/skills/synced/
+
 # opencode installs its plugin deps in place, next to opencode.json
 agents/config/node_modules/
 agents/config/package.json
