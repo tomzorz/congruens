@@ -1,14 +1,7 @@
 ---
 name: record-setup
 description: |
-  Create or revise an area's `AGENTS.records.md`, the map that tells the
-  `record` skill where each kind of information gets written in this repo
-  or folder tree. Interviews the user branch by branch with the Question
-  Tool (scope, hosting and visibility, rules file, docs, decisions,
-  diagrams, parked work, spikes, questions, machine facts), writes the
-  file beside `AGENTS.md`, and adds the pointer bullet to `AGENTS.md`.
-  Use when `record` finds an `AGENTS.md` with no records file beside it,
-  or when the user wants to change where things go.
+  Create or revise an area's `AGENTS.records.md`, the map that tells the `record` skill where each kind of information gets written in this repo or folder tree. Interviews the user branch by branch with the Question Tool (scope, hosting and visibility, ownership, rules file, docs, decisions, diagrams, parked work, spikes, questions, machine facts), writes the file beside `AGENTS.md`, and adds the pointer bullet and the ownership sentence to `AGENTS.md`. Use when `record` finds an `AGENTS.md` with no records file beside it, or when the user wants to change where things go.
 author: congruens
 version: 1.0.0
 date: 2026-09-05
@@ -42,6 +35,7 @@ Look, so you can recommend rather than ask blind:
 - Does `docs/` exist. Are there specs, and in what language. Is there a
   `spikes/` or `sandbox/` folder. Is there a `docs/diagrams/`.
 - Is there a next area up: another `AGENTS.md` higher in the tree.
+- Does `AGENTS.md` already say whose code this is. Whose is the remote: the user's personal account, an employer, a client, an upstream project.
 
 ## The interview
 
@@ -55,27 +49,28 @@ branches, in order:
 2. **Version control and visibility.** Tracked, hosted where, public or
    private. Public settles the machine-fact branch: nothing machine-specific
    goes in.
-3. **Rules file.** `AGENTS.md`, `CLAUDE.md`, or both via symlink. Do some
+3. **Ownership.** Whose code this is: the agent's own (recommended for the user's personal projects), someone else's (name the owner), or not code at all, which gets no sentence.
+4. **Rules file.** `AGENTS.md`, `CLAUDE.md`, or both via symlink. Do some
    rules belong to the next area up instead.
-4. **Documents.** Where design and procedures go: `docs/`, the README, or
+5. **Documents.** Where design and procedures go: `docs/`, the README, or
    somewhere the user names. Is there a spec language for normative text.
-5. **Decisions and findings.** Inline in the doc they affect, dated
+6. **Decisions and findings.** Inline in the doc they affect, dated
    (recommended). An ADR folder only for teams that already keep one. Where
    does a no-go finding with nothing to inform go: README section
    (recommended) or nowhere.
-6. **Diagrams.** `docs/diagrams/` (recommended), another path, or not kept.
+7. **Diagrams.** `docs/diagrams/` (recommended), another path, or not kept.
    Whatever is chosen overrides the drawing skill's own default location
    for diagrams worth keeping; transient review pages stay where that
    skill puts them.
-7. **Parked work.** Issues on the host (recommended when hosted), a named
+8. **Parked work.** Issues on the host (recommended when hosted), a named
    external tracker, a TODO comment at the site, or nowhere.
-8. **Spikes.** Sandbox folder name, committed or ignored. Reuse an existing
+9. **Spikes.** Sandbox folder name, committed or ignored. Reuse an existing
    one if found.
-9. **Questions.** Ask the user (recommended), or an `ASSUMPTION:` comment at
-   the site when the user is away.
-10. **Machine facts.** Where they go for this area: the next area up, a path
+10. **Questions.** Ask the user (recommended), or an `ASSUMPTION:` comment at
+    the site when the user is away.
+11. **Machine facts.** Where they go for this area: the next area up, a path
     the user names, or nowhere. Public areas get "nowhere" by default.
-11. **Not recorded.** Anything to exclude beyond the defaults (progress,
+12. **Not recorded.** Anything to exclude beyond the defaults (progress,
     summaries, anything git already says).
 
 Skip a branch only when the look-around already settled it beyond doubt, and
@@ -97,6 +92,7 @@ Read by the `record` skill when it has something to write; created by
 
 - Scope: this repository
 - Version control: git, GitHub `owner/repo`, public
+- Ownership: the agent's own, stated in `AGENTS.md`
 - Spec language: none
 - Spike sandbox: `spikes/`, committed
 
@@ -137,6 +133,24 @@ records file is a map nobody opens.
 
 If there is no `AGENTS.md`, write the records file anyway and tell the user
 the bullet has no home until one exists.
+
+## State the ownership in AGENTS.md
+
+The ownership answer goes into `AGENTS.md` as one line in its opening section, not into the records file: the records file is read only when there is something to write, and this line has to be in front of every session. The records file's `Ownership:` line only marks that the question was asked.
+
+For the agent's own code, this sentence, verbatim, whatever the voice of the file around it:
+
+```markdown
+This codebase is yours: what it's for and how it's built are your call, and you'll keep building on it.
+```
+
+It is the wording Anthropic tested, and a paraphrase is an untested sentence.
+
+For someone else's code:
+
+```markdown
+This codebase belongs to <owner>.
+```
 
 ## Finish
 

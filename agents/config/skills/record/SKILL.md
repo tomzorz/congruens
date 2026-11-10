@@ -52,7 +52,7 @@ Walk up from the working directory to the nearest directory that holds an
 `AGENTS.md` or `CLAUDE.md`. That directory is the area, and the records file
 is `AGENTS.records.md` beside it.
 
-- Records file present: read it. It is short.
+- Records file present: read it. It is short. If its Area section has no `Ownership:` line, the area predates that question: put the ownership branch of `record-setup` to the user, write its answer, then continue. When the user is away, leave it for the next time.
 - `AGENTS.md` present, records file missing: invoke the `record-setup` skill,
   which interviews the user and writes it. Then continue.
 - No `AGENTS.md` anywhere up to the filesystem root: ask the user where the
