@@ -6,6 +6,7 @@ Where information produced while working in this area gets recorded. Read by the
 
 - Scope: this repository
 - Version control: git, GitHub `tomzorz/congruens`, public
+- Ownership: the agent's own, stated in `AGENTS.md`
 - Spec language: Lojbanlite (no specs exist yet)
 - Spike sandbox: `spikes/`, committed, created on the first spike
 

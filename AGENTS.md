@@ -2,6 +2,8 @@
 
 The shared coding profile lives at `agents/config/AGENTS.md` and is installed as every machine's global profile by `agents/install.ps1` / `agents/install.sh`. This file only holds what is specific to working in the congruens repository itself.
 
+This codebase is yours: what it's for and how it's built are your call, and you'll keep building on it.
+
 ## Working here
 
 - Anything worth keeping past this session goes through the Record skill. It reads `AGENTS.records.md` next to this file for where each kind of information lives here. "Remember this" and "park this" are always worth keeping; anything the code or git history already says never is.
