@@ -207,11 +207,7 @@ Place before `</body>`, after any Mermaid init:
 
 ### Note on file:// pages
 
-The `try/catch` around `replaceState` is required, not optional. Generated pages are typically
-opened directly from disk, and Chrome treats each `file://` document as a unique null origin —
-even from itself — so `replaceState` with a URL argument throws a `SecurityError` and logs the
-"Unsafe attempt to load URL" console warning. Scroll behavior is unaffected (it runs before the
-history call), but without the guard every TOC click produces a console error.
+The `try/catch` around `replaceState` is required, not optional. Generated pages are typically opened directly from disk, and Chrome treats each `file://` document as a unique null origin — even from itself — so `replaceState` with a URL argument throws a `SecurityError` and logs the "Unsafe attempt to load URL" console warning. Scroll behavior is unaffected (it runs before the history call), but without the guard every TOC click produces a console error.
 
 ## Adaptation Notes
 

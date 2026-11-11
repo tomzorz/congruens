@@ -1,20 +1,15 @@
 ---
 name: verbalized-sampling
 description: |
-  Generate multiple diverse responses sampled from the tails of the probability
-  distribution. Produces 5 responses with explicit probability estimates, each
-  with probability less than 0.10. Use this skill when you want to explore
-  unconventional or less likely but potentially valuable answers.
+  Generate multiple diverse responses sampled from the tails of the probability distribution. Produces 5 responses with explicit probability estimates, each with probability less than 0.10. Use this skill when you want to explore unconventional or less likely but potentially valuable answers.
 allowed-tools: Read, Glob, Grep
 ---
 
 # Verbalized Sampling
 
-Generate 5 responses to the user query, each within a separate `<response>` tag.
-Each `<response>` must include a `<text>` and a numeric `<probability>`.
+Generate 5 responses to the user query, each within a separate `<response>` tag. Each `<response>` must include a `<text>` and a numeric `<probability>`.
 
-Please sample at random from the tails of the distribution, such that the
-probability of each response is less than 0.10.
+Please sample at random from the tails of the distribution, such that the probability of each response is less than 0.10.
 
 ## Output Format
 

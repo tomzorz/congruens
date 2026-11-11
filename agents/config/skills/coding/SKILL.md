@@ -1,12 +1,7 @@
 ---
 name: coding
 description: |
-  General rules for writing or changing code in any language: the two
-  tenets (iteration speed, simple but easy to change), the order of work
-  for new features, the shape of good code, ruthless cleanup, testing
-  philosophy, and how a new dependency gets chosen. Invoke before touching
-  code. It names the per-language skills to invoke alongside it:
-  coding-csharp, coding-python, coding-typescript, coding-web.
+  General rules for writing or changing code in any language: the two tenets (iteration speed, simple but easy to change), the order of work for new features, the shape of good code, ruthless cleanup, testing philosophy, and how a new dependency gets chosen. Invoke before touching code. It names the per-language skills to invoke alongside it: coding-csharp, coding-python, coding-typescript, coding-web.
 author: congruens
 version: 1.2.0
 date: 2026-09-16

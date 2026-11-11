@@ -1,14 +1,7 @@
 ---
 name: tk-placeholder
 description: |
-  Leave a searchable TK placeholder instead of guessing, inventing, or leaving
-  a blank when a fact is missing from text you are writing. Use whenever a
-  value, name, number, date, quote, link or section is unknown and has to be
-  filled in later: drafts with gaps, "TBD", "fill in later", "we don't have
-  that number yet", square-bracket stand-ins, X marks. Covers the TK_thing
-  form, why it is one double-clickable token, and how to format it in
-  markdown, Word and HTML so typing over the selection already produces the
-  right formatting.
+  Leave a searchable TK placeholder instead of guessing, inventing, or leaving a blank when a fact is missing from text you are writing. Use whenever a value, name, number, date, quote, link or section is unknown and has to be filled in later: drafts with gaps, "TBD", "fill in later", "we don't have that number yet", square-bracket stand-ins, X marks. Covers the TK_thing form, why it is one double-clickable token, and how to format it in markdown, Word and HTML so typing over the selection already produces the right formatting.
 author: congruens
 version: 1.0.0
 date: 2026-09-12

@@ -9,84 +9,51 @@ date: 2026-09-05
 
 # Record Setup
 
-The `record` skill fixes the vocabulary: every item is a rule, a code fact, a
-design, a decision, a finding, a procedure, a diagram, parked work, a
-question, a machine fact, or not recorded. This skill fixes the geography:
-where each of those goes in one particular area. The answers differ per
-area, so they are asked, not assumed.
+The `record` skill fixes the vocabulary: every item is a rule, a code fact, a design, a decision, a finding, a procedure, a diagram, parked work, a question, a machine fact, or not recorded. This skill fixes the geography: where each of those goes in one particular area. The answers differ per area, so they are asked, not assumed.
 
 ## When to use this skill
 
-- `record` walked up to an `AGENTS.md` and found no `AGENTS.records.md`
-  beside it.
-- The user wants to change the answers: a tracker moved, a docs folder
-  appeared, the repo went public.
+- `record` walked up to an `AGENTS.md` and found no `AGENTS.records.md` beside it.
+- The user wants to change the answers: a tracker moved, a docs folder appeared, the repo went public.
 - A new area is being set up and agents will work in it.
 
 ## Before the interview
 
 Look, so you can recommend rather than ask blind:
 
-- Confirm the area root: the directory holding the nearest `AGENTS.md` or
-  `CLAUDE.md`. If neither exists, the interview starts by asking where the
-  root is, and ends by noting that an `AGENTS.md` should exist there.
-- Is it a git repo, what is the remote, is it public. `git remote -v` and
-  the host's visibility flag if a CLI is available.
-- Does `docs/` exist. Are there specs, and in what language. Is there a
-  `spikes/` or `sandbox/` folder. Is there a `docs/diagrams/`.
+- Confirm the area root: the directory holding the nearest `AGENTS.md` or `CLAUDE.md`. If neither exists, the interview starts by asking where the root is, and ends by noting that an `AGENTS.md` should exist there.
+- Is it a git repo, what is the remote, is it public. `git remote -v` and the host's visibility flag if a CLI is available.
+- Does `docs/` exist. Are there specs, and in what language. Is there a `spikes/` or `sandbox/` folder. Is there a `docs/diagrams/`.
 - Is there a next area up: another `AGENTS.md` higher in the tree.
 - Does `AGENTS.md` already say whose code this is. Whose is the remote: the user's personal account, an employer, a client, an upstream project.
 
 ## The interview
 
-Socratic-press style: one branch at a time, resolve it, move on. Use the Question
-Tool for every round. Put the recommended option first and mark it. Every
-round carries the catch-all as the shared profile defines it. The
-branches, in order:
+Socratic-press style: one branch at a time, resolve it, move on. Use the Question Tool for every round. Put the recommended option first and mark it. Every round carries the catch-all as the shared profile defines it. The branches, in order:
 
-1. **Scope.** Is the area root what you found? Repo, folder tree, or machine
-   root.
-2. **Version control and visibility.** Tracked, hosted where, public or
-   private. Public settles the machine-fact branch: nothing machine-specific
-   goes in.
+1. **Scope.** Is the area root what you found? Repo, folder tree, or machine root.
+2. **Version control and visibility.** Tracked, hosted where, public or private. Public settles the machine-fact branch: nothing machine-specific goes in.
 3. **Ownership.** Whose code this is: the agent's own (recommended for the user's personal projects), someone else's (name the owner), or not code at all, which gets no sentence.
-4. **Rules file.** `AGENTS.md`, `CLAUDE.md`, or both via symlink. Do some
-   rules belong to the next area up instead.
-5. **Documents.** Where design and procedures go: `docs/`, the README, or
-   somewhere the user names. Is there a spec language for normative text.
-6. **Decisions and findings.** Inline in the doc they affect, dated
-   (recommended). An ADR folder only for teams that already keep one. Where
-   does a no-go finding with nothing to inform go: README section
-   (recommended) or nowhere.
-7. **Diagrams.** `docs/diagrams/` (recommended), another path, or not kept.
-   Whatever is chosen overrides the drawing skill's own default location
-   for diagrams worth keeping; transient review pages stay where that
-   skill puts them.
-8. **Parked work.** Issues on the host (recommended when hosted), a named
-   external tracker, a TODO comment at the site, or nowhere.
-9. **Spikes.** Sandbox folder name, committed or ignored. Reuse an existing
-   one if found.
-10. **Questions.** Ask the user (recommended), or an `ASSUMPTION:` comment at
-    the site when the user is away.
-11. **Machine facts.** Where they go for this area: the next area up, a path
-    the user names, or nowhere. Public areas get "nowhere" by default.
-12. **Not recorded.** Anything to exclude beyond the defaults (progress,
-    summaries, anything git already says).
+4. **Rules file.** `AGENTS.md`, `CLAUDE.md`, or both via symlink. Do some rules belong to the next area up instead.
+5. **Documents.** Where design and procedures go: `docs/`, the README, or somewhere the user names. Is there a spec language for normative text.
+6. **Decisions and findings.** Inline in the doc they affect, dated (recommended). An ADR folder only for teams that already keep one. Where does a no-go finding with nothing to inform go: README section (recommended) or nowhere.
+7. **Diagrams.** `docs/diagrams/` (recommended), another path, or not kept. Whatever is chosen overrides the drawing skill's own default location for diagrams worth keeping; transient review pages stay where that skill puts them.
+8. **Parked work.** Issues on the host (recommended when hosted), a named external tracker, a TODO comment at the site, or nowhere.
+9. **Spikes.** Sandbox folder name, committed or ignored. Reuse an existing one if found.
+10. **Questions.** Ask the user (recommended), or an `ASSUMPTION:` comment at the site when the user is away.
+11. **Machine facts.** Where they go for this area: the next area up, a path the user names, or nowhere. Public areas get "nowhere" by default.
+12. **Not recorded.** Anything to exclude beyond the defaults (progress, summaries, anything git already says).
 
-Skip a branch only when the look-around already settled it beyond doubt, and
-say that you skipped it and why.
+Skip a branch only when the look-around already settled it beyond doubt, and say that you skipped it and why.
 
 ## Write the file
 
-`AGENTS.records.md`, beside `AGENTS.md`. Short: it is a map, not a policy
-document. The policy lives in the `record` skill.
+`AGENTS.records.md`, beside `AGENTS.md`. Short: it is a map, not a policy document. The policy lives in the `record` skill.
 
 ```markdown
 # Records
 
-Where information produced while working in this area gets recorded.
-Read by the `record` skill when it has something to write; created by
-`record-setup`. Edit by hand when the answers change.
+Where information produced while working in this area gets recorded. Read by the `record` skill when it has something to write; created by `record-setup`. Edit by hand when the answers change.
 
 ## Area
 
@@ -113,26 +80,19 @@ Read by the `record` skill when it has something to write; created by
 | Not recorded | Progress, summaries, anything git already says | |
 ```
 
-Every kind gets a row, even when the answer is "nowhere", so `record` never
-has to guess whether a kind was considered.
+Every kind gets a row, even when the answer is "nowhere", so `record` never has to guess whether a kind was considered.
 
 ## Point AGENTS.md at it
 
-Add one bullet to `AGENTS.md` if it is not already there, in whatever
-section holds working rules:
+Add one bullet to `AGENTS.md` if it is not already there, in whatever section holds working rules:
 
 ```markdown
-- Anything worth keeping past this session goes through the Record skill.
-  It reads `AGENTS.records.md` next to this file for where each kind of
-  information lives here. "Remember this" and "park this" are always worth
-  keeping; anything the code or git history already says never is.
+- Anything worth keeping past this session goes through the Record skill. It reads `AGENTS.records.md` next to this file for where each kind of information lives here. "Remember this" and "park this" are always worth keeping; anything the code or git history already says never is.
 ```
 
-That bullet is how every session learns the skill exists. Without it the
-records file is a map nobody opens.
+That bullet is how every session learns the skill exists. Without it the records file is a map nobody opens.
 
-If there is no `AGENTS.md`, write the records file anyway and tell the user
-the bullet has no home until one exists.
+If there is no `AGENTS.md`, write the records file anyway and tell the user the bullet has no home until one exists.
 
 ## State the ownership in AGENTS.md
 
@@ -154,6 +114,4 @@ This codebase belongs to <owner>.
 
 ## Finish
 
-Show both files. Do not commit; that is the user's call. If the area still
-has a `.agents/` folder from the old system, say so and offer the
-`record-triage` skill.
+Show both files. Do not commit; that is the user's call. If the area still has a `.agents/` folder from the old system, say so and offer the `record-triage` skill.

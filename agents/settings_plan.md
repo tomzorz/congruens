@@ -2,9 +2,7 @@
 
 Guidelines for maintaining permissions and settings across agentic tool configurations.
 
-Each tool (OpenCode, Claude Code, etc.) has its own settings format.
-This document describes the **shared philosophy** so that when a tool-specific JSON file is updated,
-it stays consistent with the others.
+Each tool (OpenCode, Claude Code, etc.) has its own settings format. This document describes the **shared philosophy** so that when a tool-specific JSON file is updated, it stays consistent with the others.
 
 ---
 
@@ -42,10 +40,7 @@ it stays consistent with the others.
 - Disk-level: `> /dev/sda*`, `mkfs *`, `dd if=*`
 - Fork bomb: `:(){:|:&};:`
 
-**Git posture: middle ground.** Normal forward-moving git work is allowed in config, but agents
-ask before `git commit` and `git push` when the user is present (a courtesy defined in AGENTS.md,
-not enforced by config). History rewriting and anything that destroys work stays denied. GitHub
-branch protection is the real backstop on branches where it matters.
+**Git posture: middle ground.** Normal forward-moving git work is allowed in config, but agents ask before `git commit` and `git push` when the user is present (a courtesy defined in AGENTS.md, not enforced by config). History rewriting and anything that destroys work stays denied. GitHub branch protection is the real backstop on branches where it matters.
 
 **Allow (forward-moving git):**
 

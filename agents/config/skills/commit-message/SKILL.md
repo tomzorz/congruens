@@ -1,12 +1,7 @@
 ---
 name: commit-message
 description: |
-  Write the commit message for a git commit. Invoke this before EVERY
-  `git commit`, without exception, including one-line commits, fixups,
-  amends, and squash messages. Also use when rewording an existing commit,
-  writing a merge or revert message by hand, or reviewing someone else's
-  message. Enforces the subject/body split, the 50-character imperative
-  subject, the 72-column body, and what-and-why over how.
+  Write the commit message for a git commit. Invoke this before EVERY `git commit`, without exception, including one-line commits, fixups, amends, and squash messages. Also use when rewording an existing commit, writing a merge or revert message by hand, or reviewing someone else's message. Enforces the subject/body split, the 50-character imperative subject, the 72-column body, and what-and-why over how.
 author: congruens
 version: 1.0.0
 date: 2026-08-12

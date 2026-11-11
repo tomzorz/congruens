@@ -1,17 +1,7 @@
 ---
 name: review-invariants
 description: |
-  Find every invariant a codebase relies on but does not enforce: the
-  value assumed non-null, the email assumed unique, the total assumed to
-  equal the sum of its lines, the init that must run first, the single
-  instance, the payload shape nobody validates. Read-only. Each finding
-  cites where the code relies on it, what breaks if it is false, how it
-  could become false, and the strongest enforcement that would fit, ranked
-  by consequence. Use when the user asks to "find every invariant my app
-  relies on but doesn't explicitly enforce", audit hidden assumptions, or
-  hunt for "can't happen" bugs. Pairs with enforce-invariants, which acts
-  on the findings; review-state-machines and formalize-state-machines are
-  the sibling pair.
+  Find every invariant a codebase relies on but does not enforce: the value assumed non-null, the email assumed unique, the total assumed to equal the sum of its lines, the init that must run first, the single instance, the payload shape nobody validates. Read-only. Each finding cites where the code relies on it, what breaks if it is false, how it could become false, and the strongest enforcement that would fit, ranked by consequence. Use when the user asks to "find every invariant my app relies on but doesn't explicitly enforce", audit hidden assumptions, or hunt for "can't happen" bugs. Pairs with enforce-invariants, which acts on the findings; review-state-machines and formalize-state-machines are the sibling pair.
 author: congruens
 version: 1.0.0
 date: 2026-11-09

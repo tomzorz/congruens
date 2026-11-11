@@ -1,17 +1,7 @@
 ---
 name: review-state-machines
 description: |
-  Find every implicit state machine in a codebase or a named part of it:
-  lifecycles spread across boolean flags, status fields, nullable "not yet"
-  fields, call-order rules and scattered guards, with no single state value
-  and no single place that defines the legal moves. Read-only. Reconstructs
-  each machine with file-and-line evidence, finds reachable illegal
-  combinations and unhandled events, ranks the machines, and shows a report
-  with diagrams. Use when the user asks to "find all of the implicit state
-  machines in my app", audit lifecycle or status handling, or work out why a
-  flag combination keeps causing bugs. Pairs with formalize-state-machines,
-  which makes one machine explicit; review-invariants and
-  enforce-invariants are the sibling pair.
+  Find every implicit state machine in a codebase or a named part of it: lifecycles spread across boolean flags, status fields, nullable "not yet" fields, call-order rules and scattered guards, with no single state value and no single place that defines the legal moves. Read-only. Reconstructs each machine with file-and-line evidence, finds reachable illegal combinations and unhandled events, ranks the machines, and shows a report with diagrams. Use when the user asks to "find all of the implicit state machines in my app", audit lifecycle or status handling, or work out why a flag combination keeps causing bugs. Pairs with formalize-state-machines, which makes one machine explicit; review-invariants and enforce-invariants are the sibling pair.
 author: congruens
 version: 1.0.0
 date: 2026-11-09

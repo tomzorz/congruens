@@ -1,15 +1,7 @@
 ---
 name: enforce-invariants
 description: |
-  Enforce invariants a codebase relies on but does not guarantee, picking
-  the strongest mechanism that fits from a ladder: make the bad value
-  unrepresentable in the type system, parse it at the boundary, constrain
-  it in storage, route every write through one owner, assert it where it
-  is written. Checks existing data before adding a constraint, proves the
-  gap with a test before closing it, and removes the defensive checks the
-  enforcement makes redundant. Use when the user wants to enforce,
-  guarantee, validate or harden an assumption, make an illegal value
-  unrepresentable, or act on findings from a review-invariants report.
+  Enforce invariants a codebase relies on but does not guarantee, picking the strongest mechanism that fits from a ladder: make the bad value unrepresentable in the type system, parse it at the boundary, constrain it in storage, route every write through one owner, assert it where it is written. Checks existing data before adding a constraint, proves the gap with a test before closing it, and removes the defensive checks the enforcement makes redundant. Use when the user wants to enforce, guarantee, validate or harden an assumption, make an illegal value unrepresentable, or act on findings from a review-invariants report.
 author: congruens
 version: 1.0.0
 date: 2026-11-09

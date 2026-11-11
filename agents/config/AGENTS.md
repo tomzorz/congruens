@@ -28,30 +28,12 @@
 
 ## Git Workflow
 
-- Git write operations (add, commit, switch, branch, stash, fetch, push,
-  worktree, and fast-forward-only merge and pull) are enabled in the
-  permission config, but **ask before `git commit` and `git push` when the
-  user is present**, unless they granted it for the session (see the
-  one-way doors rule below). This is a courtesy, not enforcement: explicitly
-  requested unattended work may commit and push without asking. GitHub branch
-  protection is the real backstop on branches where it matters.
-- **Every commit message goes through the Commit Message skill.** Invoke it before
-  each `git commit`, `git commit --amend`, squash/fixup message, and rebase reword,
-  with no exceptions for small commits. House standard: 50-character imperative
-  subject, blank line, body wrapped at 72 explaining what and why.
-- Never force-push, delete remote branches, or rewrite history. These are denied
-  in config and stay off-limits regardless of context.
-- Commits are authored as the user, with no co-author trailer
-  (`attribution.commit` is set to `""` in the settings seed).
-- Agent commits are signed and pushed with dedicated per-machine agent keys, not
-  the user's own keys or their password-manager SSH agent. Key locations and env
-  overrides are machine-specific and documented on each machine, never in this
-  repo.
-- `git -C <path> <subcommand>` matches none of the curated allow or deny
-  patterns, so every such call falls to the classifier. `cd` into the
-  repository and use plain `git <subcommand>` forms; the working directory
-  persists between shell calls. Do not add a `git -C` allow to compensate:
-  the force-push and deletion denies would not cover the `-C` spellings.
+- Git write operations (add, commit, switch, branch, stash, fetch, push, worktree, and fast-forward-only merge and pull) are enabled in the permission config, but **ask before `git commit` and `git push` when the user is present**, unless they granted it for the session (see the one-way doors rule below). This is a courtesy, not enforcement: explicitly requested unattended work may commit and push without asking. GitHub branch protection is the real backstop on branches where it matters.
+- **Every commit message goes through the Commit Message skill.** Invoke it before each `git commit`, `git commit --amend`, squash/fixup message, and rebase reword, with no exceptions for small commits. House standard: 50-character imperative subject, blank line, body wrapped at 72 explaining what and why.
+- Never force-push, delete remote branches, or rewrite history. These are denied in config and stay off-limits regardless of context.
+- Commits are authored as the user, with no co-author trailer (`attribution.commit` is set to `""` in the settings seed).
+- Agent commits are signed and pushed with dedicated per-machine agent keys, not the user's own keys or their password-manager SSH agent. Key locations and env overrides are machine-specific and documented on each machine, never in this repo.
+- `git -C <path> <subcommand>` matches none of the curated allow or deny patterns, so every such call falls to the classifier. `cd` into the repository and use plain `git <subcommand>` forms; the working directory persists between shell calls. Do not add a `git -C` allow to compensate: the force-push and deletion denies would not cover the `-C` spellings.
 
 ## Mindset & Process
 
@@ -72,24 +54,17 @@
 
 ## Specification Writing
 
-Specifications are written in **Lojbanlite**, our controlled English where every normative sentence
-has exactly one reading. The full rule set, workflow, and rationale live in the Lojbanlite skill.
-This section only tells you when to invoke it.
+Specifications are written in **Lojbanlite**, our controlled English where every normative sentence has exactly one reading. The full rule set, workflow, and rationale live in the Lojbanlite skill. This section only tells you when to invoke it.
 
-**Lojbanlite applies to**: requirements, acceptance criteria, design and interface specs, API
-contracts in prose, procedures, runbooks, safety and rollback instructions, and the normative parts
-of an ADR.
+**Lojbanlite applies to**: requirements, acceptance criteria, design and interface specs, API contracts in prose, procedures, runbooks, safety and rollback instructions, and the normative parts of an ADR.
 
-**It does not apply to**: code, comments, commit messages, PR descriptions, READMEs, tutorials,
-chat, quoted text, or error output.
+**It does not apply to**: code, comments, commit messages, PR descriptions, READMEs, tutorials, chat, quoted text, or error output.
 
 **Decisions live in the spec.** Record each design decision inside the spec document and section it affects, updating the spec text in place. Never create a standalone decisions file or a catch-all 'Decisions' section.
 
-**Never run Lojbanlite and the Humanizer on the same text.** Specs get Lojbanlite, narrative prose
-gets the Humanizer. They pull in opposite directions by design.
+**Never run Lojbanlite and the Humanizer on the same text.** Specs get Lojbanlite, narrative prose gets the Humanizer. They pull in opposite directions by design.
 
-When a spec does not obey the rules, do not argue about it in review. Run the skill and present the
-rework, the violated rule IDs, and the list of ambiguities the original left unresolved.
+When a spec does not obey the rules, do not argue about it in review. Run the skill and present the rework, the violated rule IDs, and the list of ambiguities the original left unresolved.
 
 ## Tooling & Workflow
 

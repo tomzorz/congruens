@@ -1,12 +1,7 @@
 ---
 name: repo-init
 description: |
-  Set up a new repository the archetype way, or add a project to one that
-  already exists. Use when starting a new repo or project, scaffolding a
-  project structure, asking what folders a repo should have, wiring up
-  .gitignore / .gitattributes / git-lfs for a fresh checkout, or when the
-  user mentions archetype. Follows github.com/tomzorz/archetype, which is
-  the source of truth: fetch the templates from there, never retype them.
+  Set up a new repository the archetype way, or add a project to one that already exists. Use when starting a new repo or project, scaffolding a project structure, asking what folders a repo should have, wiring up .gitignore / .gitattributes / git-lfs for a fresh checkout, or when the user mentions archetype. Follows github.com/tomzorz/archetype, which is the source of truth: fetch the templates from there, never retype them.
 author: congruens
 version: 1.1.0
 date: 2026-08-22

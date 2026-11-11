@@ -1,16 +1,7 @@
 ---
 name: formalize-state-machines
 description: |
-  Turn one implicit state machine into an explicit one: write down its
-  states, events and transition table, settle with the user every place
-  where the code's behaviour is ambiguous or wrong, pin today's behaviour
-  with characterization tests, refactor to a closed set of states and a
-  pure transition function, check the result with model-based tests that
-  use the table as the oracle, and then propose splitting it into nested
-  or parallel sub-machines where that makes it easier to reason about.
-  Use when the user wants to formalize, make explicit, refactor or
-  untangle a lifecycle, status handling or a cluster of flags, or picks a
-  machine from a review-state-machines report. One machine per run.
+  Turn one implicit state machine into an explicit one: write down its states, events and transition table, settle with the user every place where the code's behaviour is ambiguous or wrong, pin today's behaviour with characterization tests, refactor to a closed set of states and a pure transition function, check the result with model-based tests that use the table as the oracle, and then propose splitting it into nested or parallel sub-machines where that makes it easier to reason about. Use when the user wants to formalize, make explicit, refactor or untangle a lifecycle, status handling or a cluster of flags, or picks a machine from a review-state-machines report. One machine per run.
 author: congruens
 version: 1.0.0
 date: 2026-11-09

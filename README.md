@@ -82,18 +82,12 @@ This loads the Congruens module and initializes oh-my-posh. All customization li
 
 ### Landing in PowerShell (macOS / Linux)
 
-zsh (or bash) stays the login shell; congruens never injects `exec pwsh` into rc files. Hijacking
-the login shell breaks terminal cwd tracking, app-launched terminals, and `$SHELL -c` callers.
-Instead:
+zsh (or bash) stays the login shell; congruens never injects `exec pwsh` into rc files. Hijacking the login shell breaks terminal cwd tracking, app-launched terminals, and `$SHELL -c` callers. Instead:
 
-- **Ghostty** is configured by the bootstrap to open new terminals straight into PowerShell
-  (`command = <pwsh>` in `~/.config/ghostty/config`). `ghostty -e <cmd>` still overrides it.
-- **Other terminals**: set the profile shell to the pwsh path in their settings, or just type
-  `pw` -- a small function the bootstrap adds to your rc file that swaps the current shell for
-  PowerShell.
+- **Ghostty** is configured by the bootstrap to open new terminals straight into PowerShell (`command = <pwsh>` in `~/.config/ghostty/config`). `ghostty -e <cmd>` still overrides it.
+- **Other terminals**: set the profile shell to the pwsh path in their settings, or just type `pw` -- a small function the bootstrap adds to your rc file that swaps the current shell for PowerShell.
 
-Re-running the bootstrap migrates away any `exec pwsh` block a previous congruens version
-installed.
+Re-running the bootstrap migrates away any `exec pwsh` block a previous congruens version installed.
 
 ### Cross-Platform Commands
 
@@ -150,21 +144,15 @@ The Congruens module provides commands that abstract platform differences:
 | `tirith-check scan [path]` | Scan files/directories for hidden content |
 | `tirith-check score <url>` | Trust-signal breakdown for a URL |
 
-`tirith-check` wraps [tirith](https://github.com/sheeki03/tirith) and has more subcommands than
-listed here -- run `cgrman builtins` for the full set.
+`tirith-check` wraps [tirith](https://github.com/sheeki03/tirith) and has more subcommands than listed here -- run `cgrman builtins` for the full set.
 
-Metadata for every built-in lives in `builtins/*.json`, which is what `cgrman` reads. Adding a
-command means adding a JSON file, not editing a list in code.
+Metadata for every built-in lives in `builtins/*.json`, which is what `cgrman` reads. Adding a command means adding a JSON file, not editing a list in code.
 
 ### Adding a Built-In Command
 
-1. Add a `.ps1` under `powershell/Congruens/Public/` with a formal PascalCase function and a
-   short-name wrapper that splats `@PSBoundParameters` to it. Give it comment-based help, and a
-   `Register-ArgumentCompleter` for both names if it takes arguments.
-2. Export both names in `FunctionsToExport` in `powershell/Congruens/Congruens.psd1`, or the
-   function exists in module scope and nobody can call it.
-3. Drop a `builtins/<name>.json` with `name`, `description` and a `usage` list so `cgrman`
-   picks it up.
+1. Add a `.ps1` under `powershell/Congruens/Public/` with a formal PascalCase function and a short-name wrapper that splats `@PSBoundParameters` to it. Give it comment-based help, and a `Register-ArgumentCompleter` for both names if it takes arguments.
+2. Export both names in `FunctionsToExport` in `powershell/Congruens/Congruens.psd1`, or the function exists in module scope and nobody can call it.
+3. Drop a `builtins/<name>.json` with `name`, `description` and a `usage` list so `cgrman` picks it up.
 4. Optionally add a tip line to `Show-Motd.ps1` so the command shows up in the startup rotation.
 5. `Import-Module Congruens -Force`, run the command, and check it appears in `cgrman builtins`.
 
@@ -185,25 +173,15 @@ Each file in `tools/` declares how to install a tool on each platform:
 }
 ```
 
-Bootstrap scripts read these definitions and use the first available package manager. Which keys
-are honoured depends on the platform: Windows tries `winget`, then `scoop`, then `choco`; macOS
-uses `brew`; Linux uses whichever of `apt`/`dnf`/`pacman` it detected.
+Bootstrap scripts read these definitions and use the first available package manager. Which keys are honoured depends on the platform: Windows tries `winget`, then `scoop`, then `choco`; macOS uses `brew`; Linux uses whichever of `apt`/`dnf`/`pacman` it detected.
 
-**Installs are one-shot.** Before installing, the bootstrap runs the first word of `verify` through
-a command lookup, and skips the tool entirely if it resolves. Re-running bootstrap therefore
-installs what is missing and never upgrades what is present -- updating installed tools is left to
-each package manager (`winget upgrade`, `brew upgrade`, and so on). The exception is self-managed
-tools, below.
+**Installs are one-shot.** Before installing, the bootstrap runs the first word of `verify` through a command lookup, and skips the tool entirely if it resolves. Re-running bootstrap therefore installs what is missing and never upgrades what is present -- updating installed tools is left to each package manager (`winget upgrade`, `brew upgrade`, and so on). The exception is self-managed tools, below.
 
 ### Self-Managed Tools
 
-Some tools ship releases faster than any package manager follows. yt-dlp is the clearest case: it
-publishes fixes almost daily, and `yt-dlp -U` **refuses to run** once it detects a package-manager
-install, telling you to update through that manager instead. So the winget copy doesn't merely lag,
-it disables the updater you actually want.
+Some tools ship releases faster than any package manager follows. yt-dlp is the clearest case: it publishes fixes almost daily, and `yt-dlp -U` **refuses to run** once it detects a package-manager install, telling you to update through that manager instead. So the winget copy doesn't merely lag, it disables the updater you actually want.
 
-For those tools, congruens owns the binary. Declare a `github` block instead of package manager
-keys:
+For those tools, congruens owns the binary. Declare a `github` block instead of package manager keys:
 
 ```json
 {
@@ -240,19 +218,11 @@ keys:
 | `checksums` | Optional checksum asset; verified before the binary is placed |
 | `selfUpdate` | Optional command the tool provides to update itself |
 
-Binaries land in `~/.congruens/bin`, which `profile.ps1` **prepends** to PATH so a congruens-owned
-tool wins over a stale package-manager copy of the same name.
+Binaries land in `~/.congruens/bin`, which `profile.ps1` **prepends** to PATH so a congruens-owned tool wins over a stale package-manager copy of the same name.
 
-`cgrtool` installs, `cgrupdate` updates. Updating prefers the tool's own `selfUpdate` command; for
-tools without one it re-downloads the asset and only replaces the binary if the contents actually
-changed. Everything goes through the `/releases/latest/download/` redirect, so no GitHub API calls
-are made and the unauthenticated 60-requests-per-hour limit never applies.
+`cgrtool` installs, `cgrupdate` updates. Updating prefers the tool's own `selfUpdate` command; for tools without one it re-downloads the asset and only replaces the binary if the contents actually changed. Everything goes through the `/releases/latest/download/` redirect, so no GitHub API calls are made and the unauthenticated 60-requests-per-hour limit never applies.
 
-Scope is deliberately narrow: **single-file assets only**. Archive extraction and arch-triple
-matching are not supported, because the tools that need same-day updates all ship plain binaries,
-and the tools that ship archives don't need daily updates. Declaring a `github` block also *replaces*
-the package manager keys for that platform rather than sitting alongside them -- otherwise you end up
-with two copies and PATH order silently decides which one runs.
+Scope is deliberately narrow: **single-file assets only**. Archive extraction and arch-triple matching are not supported, because the tools that need same-day updates all ship plain binaries, and the tools that ship archives don't need daily updates. Declaring a `github` block also *replaces* the package manager keys for that platform rather than sitting alongside them -- otherwise you end up with two copies and PATH order silently decides which one runs.
 
 ### Development Environments
 
