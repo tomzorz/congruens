@@ -82,7 +82,7 @@ If the first answers show the idea is not formed yet (every question gets "I don
 
 ### Pause for experiments
 
-If a question cannot be answered without trying something ("will this handle ten thousand connections"), pause the grill, settle it with a timeboxed experiment, and resume with the result.
+If a question cannot be answered without trying something ("will this handle ten thousand connections"), pause the grill, settle it with a bounded experiment, and resume with the result.
 
 ### Know when to stop
 

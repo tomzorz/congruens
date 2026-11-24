@@ -1,10 +1,10 @@
 ---
 name: spike
 description: |
-  Run a structured, timeboxed technical exploration when facing an unknown. Define the question, set a timebox, explore, and record findings with a clear go/no-go recommendation. Prevents yak-shaving by forcing a bounded investigation with a decisive outcome. Spike code lives in a dedicated sandbox folder in the repo so proof-of-concept work is preserved and reviewable. Findings are written up so they outlive the session.
+  Run a structured, bounded technical exploration when facing an unknown. Define the question, set a stop condition (what would settle it, and how many approaches to try), explore, and record findings with a clear go/no-go recommendation. Prevents yak-shaving by forcing a decisive outcome. Spike code lives in a dedicated sandbox folder in the repo so proof-of-concept work is preserved and reviewable. Findings are written up so they outlive the session.
 author: congruens
-version: 2.1.0
-date: 2026-09-05
+version: 3.0.0
+date: 2026-11-24
 ---
 
 # Spike
@@ -13,9 +13,9 @@ A spike is a short, focused investigation into a technical unknown. You use it w
 
 The whole point is to prevent two failure modes:
 1. **Guessing wrong** and building on a bad foundation.
-2. **Yak-shaving** and spending 45 minutes exploring when 10 would have answered the question.
+2. **Yak-shaving** and chasing tangents long after the question could have been answered.
 
-A spike has a question, a timebox, an investigation, and a verdict. Always.
+A spike has a question, a stop condition, an investigation, and a verdict. Always.
 
 ## When to Use This Skill
 
@@ -61,7 +61,7 @@ Once the user answers, create the folder and optionally add a one-line README so
 ```markdown
 # Spikes
 
-Throwaway proof-of-concept code from timeboxed technical investigations. Not production code. Each subfolder's README says where its finding was written up.
+Throwaway proof-of-concept code from technical investigations. Not production code. Each subfolder's README says where its finding was written up.
 ```
 
 ### Organizing spike code in the sandbox
@@ -90,7 +90,7 @@ Rules:
 
 ### 1. Define the question
 
-Write down the exact question you're trying to answer. One question per spike. If you have three questions, run three spikes (or acknowledge you're combining them, and set the timebox accordingly).
+Write down the exact question you're trying to answer. One question per spike. If you have three questions, run three spikes (or acknowledge you're combining them, and set a stop condition for each).
 
 Good spike questions:
 - "Can the built-in .NET rate limiter do per-user policies with a custom key?"
@@ -105,11 +105,16 @@ Bad spike questions:
 
 Check for an existing sandbox folder. If none exists, ask the user before proceeding (see "Sandbox Folder" above). Do not skip this step.
 
-### 3. Set a timebox
+### 3. Set the stop condition
 
-Decide how long you'll spend before you must stop and report. Default: **10 minutes**. Adjust based on complexity but never exceed **20 minutes**. If you can't answer it in 20 minutes, the question is too big; break it down.
+Before investigating, write down two things:
 
-State the timebox explicitly when you start.
+- **What settles it**: the observation that answers the question, either way. "A second request with the same key returns the first response" settles it; "understand how idempotency works" does not.
+- **How many approaches**: the number of distinct approaches you will try before reporting inconclusive. Default: **two**. Small fixes belong to the same approach; if it still fails after a few, count it as tried. In a comparison, every option named in the question gets tried.
+
+If you can't name an observation that would settle it, the question is too big or too vague; break it down.
+
+State the stop condition explicitly when you start.
 
 ### 4. Investigate
 
@@ -126,7 +131,7 @@ All code artifacts go in the sandbox subfolder. Do not write spike code in the m
 
 ### 5. Record findings and verdict
 
-When the timebox expires (or you have your answer, whichever comes first), write up the result and put it where this repository keeps findings, so it outlives the session. If the repository has no such place, ask the user rather than inventing one. The write-up links back to the sandbox subfolder for the code.
+When the question is settled or the approaches are used up, whichever comes first, write up the result and put it where this repository keeps findings, so it outlives the session. If the repository has no such place, ask the user rather than inventing one. The write-up links back to the sandbox subfolder for the code.
 
 ## Spike Output Format
 
@@ -134,8 +139,8 @@ When the timebox expires (or you have your answer, whichever comes first), write
 # Spike: <question in natural language>
 
 **Date**: YYYY-MM-DD
-**Timebox**: X minutes
-**Time spent**: Y minutes
+**Stop condition**: <the observation that settles it>, or N approaches
+**Approaches tried**: <count, and a phrase for each>
 **Sandbox**: <relative path to spike subfolder, e.g. spikes/2026-02-20-signalr-realtime-notifications/>
 
 ## Question
@@ -156,14 +161,14 @@ One sentence: what should we do based on these findings?
 
 ## Caveats & Open Questions
 
-Anything you didn't have time to verify, edge cases you noticed but didn't test, or follow-up questions that emerged.
+Anything you didn't verify, edge cases you noticed but didn't test, or follow-up questions that emerged.
 ```
 
 ## Communicating with the User
 
-- **Before starting**: Tell the user you're running a spike, what the question is, and what the timebox is. One sentence, not a ceremony.
+- **Before starting**: Tell the user you're running a spike, what the question is, and what the stop condition is. One sentence, not a ceremony.
 - **After finishing**: Share the verdict and a one-line summary. Point them to the write-up and sandbox subfolder if they want details.
-- **If inconclusive**: Say so honestly. "I spent 10 minutes and couldn't confirm X. Here's what I found. Want me to spend more time or try a different angle?"
+- **If inconclusive**: Say so honestly. "I tried A and B and couldn't confirm X. Here's what I found. Want me to try a third approach, or narrow the question?"
 
 ## Spike Lifecycle & Cleanup
 
@@ -178,7 +183,7 @@ Spike sandbox subfolders follow the same lifecycle as their write-ups:
 
 **User**: "Can we use SignalR for the real-time notifications or do we need a separate WebSocket server?"
 
-**Agent says**: "Running a spike on this, 10-minute timebox."
+**Agent says**: "Running a spike on this: settled when a browser client receives a message pushed from a minimal hub, inconclusive after two approaches."
 
 **Agent checks**: Finds `spikes/` directory exists in the repo root. Creates `spikes/2026-02-20-signalr-realtime-notifications/`.
 
@@ -198,8 +203,8 @@ spikes/2026-02-20-signalr-realtime-notifications/
 # Spike: Can SignalR handle real-time notifications without a separate WebSocket server?
 
 **Date**: 2026-02-20
-**Timebox**: 10 minutes
-**Time spent**: 7 minutes
+**Stop condition**: a browser client receives a message pushed from a minimal hub, or two approaches
+**Approaches tried**: one (minimal hub and browser client)
 **Sandbox**: spikes/2026-02-20-signalr-realtime-notifications/
 
 ## Question
